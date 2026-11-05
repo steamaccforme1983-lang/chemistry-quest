@@ -294,6 +294,14 @@ function answer(choice) {
 }
 function commitAnswer(choice) {
  const q=activeQuestion();if(!q || state.response?.id===q.id) return;
+ const remote=globalThis.accountScoreAction?.('practice',{id:q.id,choice},receipt=>{
+  render();feedback(q,receipt.choice,receipt.earnedNow);
+  showAnswerPopup(q,receipt.correct,receipt.earnedNow,receipt);
+  const level=Math.floor(state.xp/100)+1,oldLevel=Math.floor((state.xp-receipt.delta)/100)+1;
+  if(level>oldLevel)showLevelUp(level,receipt.delta);
+  $('next').focus({preventScroll:true});
+ });
+ if(remote)return remote;
  const correct=choice===q.answer, earnedNow=correct && !state.results[q.id]?.earned;
  recordAttempt(q.topic,correct);
  const oldLevel=Math.floor(state.xp/100)+1;
@@ -373,7 +381,10 @@ $('reset-button').addEventListener('click',()=>{
   : 'This resets your account’s XP, answers, streaks, and challenge progress. The reset will sync online and appear on your other devices. You can’t undo it.';
  $('reset-dialog').showModal();
 });
-$('reset-dialog').addEventListener('close',()=>{if($('reset-dialog').returnValue==='reset'){dismissAnswerPopup();state=fresh();reviewQueue=[];render(true);save();toast('Fresh start. Let’s build from here.');}});
+$('reset-dialog').addEventListener('close',()=>{if($('reset-dialog').returnValue==='reset'){
+ if(globalThis.accountScoreAction?.('reset',{},()=>{reviewQueue=[];render(true);renderChallenge();toast('Fresh start. Your account was reset online.');}))return;
+ dismissAnswerPopup();state=fresh();reviewQueue=[];render(true);save();toast('Fresh start. Let’s build from here.');
+}});
 document.addEventListener('keydown',event=>{
  if(document.querySelector('dialog[open]') || event.target.closest?.('.challenge-card') || /SELECT|INPUT|TEXTAREA/.test(event.target.tagName) || event.altKey || event.ctrlKey || event.metaKey)return;
  if(/^[1-4]$/.test(event.key)){event.preventDefault();answer(Number(event.key)-1);}

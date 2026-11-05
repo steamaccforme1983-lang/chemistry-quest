@@ -41,7 +41,7 @@ Streak means consecutive correct responses, not consecutive calendar days. Maste
 
 ## Verification
 
-Run `node check.cjs` for question-bank structure and app interaction checks, `node check-account.cjs` for account isolation and synchronization, and `node check-regressions.cjs` for the functional bug regressions. All use only Node's standard library. See `TEST_REPORT.md` for this test pass.
+Run `node check.cjs` for question-bank structure and app interaction checks, `node check-account.cjs` for account isolation and synchronization, `node check-regressions.cjs` for functional regressions, and `node check-scoring.cjs` for authoritative-scoring client checks. All use only Node's standard library. See `TEST_REPORT.md` for this test pass.
 
 ## GitHub Pages
 
@@ -57,10 +57,23 @@ Use **Sign in · Save online** to create a Chemistry Quest account or sign in to
 - A private, random 256-bit recovery code is shown after signup. Store it privately. **Forgot password?** requires email, the saved recovery code and a new password. Recovery rotates the code, invalidates every previous session, preserves progress and resets login lockout. With neither password nor recovery code, the account cannot be recovered. No email-reset delivery is configured.
 - Three incorrect logins trigger a server-enforced 5-minute lock. Another three after the lock expires trigger 20 minutes, then 80, 320, 1280, and a 24-hour cap. Requests during a lock do not extend it. A successful login resets escalation. Recovery-code failures have a separate identical limit. The limit applies across browsers/devices, including unknown email identifiers.
 - Sessions use random 256-bit opaque tokens, stored hashed on the server and expiring after seven days. Signing out revokes the current token; recovery revokes all tokens. The browser stores a session token and per-account progress cache, never passwords or recovery codes.
-- Progress syncs after changes with a short debounce. **Sync now** refreshes the latest saved progress when idle. Initial login restores online progress. A new account can explicitly import this browser’s guest progress.
+- Progress syncs after changes with a short debounce. **Sync now** refreshes the latest saved progress when idle. Initial login restores online progress. Guest progress stays separate and cannot be imported as account XP.
 - Revision checks prevent a stale device from silently overwriting a newer save. If a conflict occurs, download the device copy if wanted and load online progress. A local backup is also retained. Sign-out and account switching keep guest and account data separate. Pending offline changes are kept locally and retried on reconnect or next login.
 - The frontend remains on GitHub Pages. The Free Supabase project hosts the API and private database. No paid plan was enabled; Free-plan limits and availability still apply. Backend source is in `backend/`. No project service key is committed or exposed to the browser. The edge endpoint validates its own sessions; Supabase’s legacy JWT gateway check is off for this function only.
 
 ## Backend verification
 
 `backend/verify.sql` exercises lockout timing, isolation, recovery and stale saves inside a rolled-back transaction. `node check-account.cjs` verifies account switching and client sync behavior. The deployed API was also checked with synthetic QA credentials without printing or saving them. `backend/schema.sql` is the original one-time schema setup, not a script to rerun on an existing database.
+
+
+## Server-calculated account XP
+
+Apply `backend/scoring.sql` once after the original schema. It adds a private question catalog, score summaries and idempotent answer receipts, and wraps the existing account API without changing credentials or the Edge endpoint. Existing online scores are preserved as a grandfathered baseline; this does not retroactively prove how those old scores were earned. Do not rerun `schema.sql` afterward, since that would replace the scoring wrapper.
+
+For signed-in accounts, the client sends a question ID and selected choice, not an XP award. The database checks its own answer catalog, awards once per question, computes sixth-answer bonuses and fifth-wrong penalties, and owns challenge deadlines and fixed rewards. Normal progress uploads cannot replace XP, streaks, earned markers, results, topic statistics or challenge answers. Guest XP cannot be imported. An explicit account reset uses a separate server action.
+
+Account submissions require an internet connection. XP is shown after the server reply; uncertain replies retain an idempotency key so **Sync now** can safely recover them without duplicate awards. Navigation and topic settings still sync. Guest practice continues to work locally without an account.
+
+Developer tools cannot be disabled reliably. A visitor may change their own display or guest save, read the public study question bank, look up answers, or automate correct submissions. This change protects saved account scores from arbitrary browser totals; it is not exam proctoring or protection against answer lookups.
+
+Run `backend/verify-scoring.sql` after installing scoring; it exercises forged uploads, grading, streaks, retries, challenge timing and reset inside a rolled-back transaction. The older `backend/verify.sql` targets the pre-scoring schema and should only be used before this migration.

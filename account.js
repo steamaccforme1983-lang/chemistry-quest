@@ -5,6 +5,7 @@
  let session=null,meta={revision:0,dirty:false},mode='login',applying=false,inFlight=false;
  let guestMemory=JSON.parse(JSON.stringify(state));
  let saveTimer,change=0,epoch=0,conflict=false,blockedUntil=0,blockedIdentity='',busy=false;
+ let scoreBusy=false,flushTask=null,pendingScore=null;
  const read=(key,fallback=null)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
  const store=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
  const metaKey=()=>`${KEY}-sync`;
@@ -38,7 +39,8 @@
   change++;meta.dirty=true;cacheMeta();status(conflict?`Sync paused. ${deviceSafety()}`:storageOK?'Changes saved on this device. Syncing…':'Progress kept in this tab. Syncing…');
   clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);
  };
- async function flush(){
+ function flush(){return flushTask||(flushTask=performFlush().finally(()=>{flushTask=null;}));}
+ async function performFlush(){
   if(!session||applying||inFlight||conflict)return;
   if(!meta.dirty){status('Up to date.');return;}
   const ticket=epoch,sequence=change,token=session.token;
@@ -47,9 +49,54 @@
    const data=await request('progress',{progress:JSON.parse(JSON.stringify(state)),revision:meta.revision},token);
    if(ticket!==epoch)return;
    meta.revision=data.revision;meta.dirty=sequence!==change;cacheMeta();
+   if(!meta.dirty&&data.serverScoring){
+    const checked=load(data.progress),fields=['xp','streak','best','wrongStreak','results','activity','challengeEarned','challenge'];
+    if(fields.some(key=>JSON.stringify(state[key])!==JSON.stringify(checked[key]))){const visits=visitCounts;replaceProgress(data.progress);visitCounts=visits;renderCounts();}
+   }
    status(meta.dirty?'Syncing newer changes…':'Progress saved online ✓');
   }catch(error){if(ticket!==epoch)return;if(error.status===409)flagConflict();else status(error.status===401?`Session expired. ${deviceSafety()} Sign in again to sync.`:`Couldn’t sync. ${deviceSafety()} Use Sync now when online.`);}
   finally{inFlight=false;if(ticket===epoch&&meta.dirty&&!conflict&&sequence!==change)saveTimer=setTimeout(flush,1200);}
+ }
+ // Browser totals are display caches. Only the server may award account XP.
+ globalThis.accountScoreAction=(kind,args={},onResult=()=>{})=>{
+  if(!session||applying)return false;
+  return runScore(kind,args,onResult);
+ };
+ async function runScore(kind,args,onResult=()=>{}){
+  if(scoreBusy)return;
+  scoreBusy=true;
+  const ticket=epoch,app=document.querySelector('.app');
+  app.inert=true;$('account-dialog').inert=true;
+  clearTimeout(saveTimer);
+  try{
+   await flush();
+   if(ticket!==epoch||!session)return;
+   if(meta.dirty||conflict)throw new Error('Sync your saved progress before answering online.');
+   const event=pendingScore||{eventId:crypto.randomUUID(),kind,...args};
+   const recovering=!!pendingScore;
+   pendingScore=event;store(`${KEY}-pending-score`,event);
+   inFlight=true;status('Checking with the server...');
+   const data=await request('progress',{revision:meta.revision,progress:{_scoreEvent:event,view:JSON.parse(JSON.stringify(state))}});
+   if(ticket!==epoch)return;
+   if(!data.serverScoring)throw new Error('Server scoring is not ready. Please try again later.');
+   pendingScore=null;try{localStorage.removeItem(`${KEY}-pending-score`)}catch{}
+   meta={revision:data.revision,dirty:false};cacheMeta();conflict=false;
+   const visits=visitCounts;replaceProgress(data.progress);visitCounts=visits;
+   const receipt=data.receipt||{};
+   if(receipt.kind==='practice'||receipt.kind==='challenge-answer'){
+    const q=ALL_QUESTIONS.find(q=>q.id===receipt.id)||CHALLENGE_QUESTIONS.find(q=>q.id===receipt.id);
+    if(q){visitCounts[receipt.correct?'correct':'wrong']++;renderCounts();}
+   }
+   if(!recovering)onResult(receipt);
+   else toast('Your previous answer was recovered. XP matches the server.');
+   status('XP checked and saved online ✓');accountUI();
+  }catch(error){
+   if(ticket!==epoch)return;
+   if(error.status===409){pendingScore=null;try{localStorage.removeItem(`${KEY}-pending-score`)}catch{}flagConflict();}
+   else if(error.status&&error.status<500&&error.status!==429){pendingScore=null;try{localStorage.removeItem(`${KEY}-pending-score`)}catch{}}
+   const message=error.status===409?'Online progress changed. Open My account and load the online copy.':error.message||'Could not check this answer. Retry when online.';
+   status(message);toast(message);
+  }finally{inFlight=false;scoreBusy=false;app.inert=false;$('account-dialog').inert=false;}
  }
  async function receiveAccount(data){
   if(KEY===GUEST)guestMemory=JSON.parse(JSON.stringify(state));
@@ -58,8 +105,10 @@
   const local=read(KEY),savedMeta=read(metaKey(),{revision:0,dirty:false});
   meta={revision:data.revision,dirty:false};conflict=false;
   if(savedMeta.dirty&&local){meta=savedMeta;replaceProgress(local);if(savedMeta.revision!==data.revision)flagConflict();else{status('Syncing saved device progress…');setTimeout(flush,0);}}
-  else {replaceProgress(data.progress||fresh());status(data.progress?'Your saved progress is ready.':'Account ready. Start fresh, or import this browser’s guest progress.');}
-  cacheMeta();$('import-guest').hidden=!!data.progress||meta.dirty;
+  else {replaceProgress(data.progress||fresh());status(data.progress?'Your saved progress is ready. Account XP is checked online.':'Account ready. Earn XP through online-checked answers. Guest progress stays separate.');}
+  cacheMeta();$('import-guest').hidden=true;
+  pendingScore=read(`${KEY}-pending-score`);
+  if(pendingScore)status('An answer needs confirmation from the server. Use Sync now to recover it safely.');
   accountUI();
  }
  function changeMode(next){
@@ -103,11 +152,13 @@
  $('recovery-saved-dialog').addEventListener('cancel',event=>event.preventDefault());
  $('recovery-saved').addEventListener('click',()=>{$('new-recovery-code').value='';$('recovery-saved-dialog').close();$('account-dialog').showModal();});
  $('sync-now').addEventListener('click',async()=>{
+  if(pendingScore){await runScore('recover',{});return;}
   if(meta.dirty){await flush();return;}
   const ticket=epoch,sequence=change;
   try{const data=await request('progress');if(!session||ticket!==epoch)return;if(sequence!==change||meta.dirty){if(meta.dirty)await flush();return;}meta.revision=data.revision;replaceProgress(data.progress||fresh());cacheMeta();status('Loaded your latest online progress ✓');}catch{if(ticket===epoch)status(`Could not refresh. ${deviceSafety()}`);}
  });
  $('load-cloud').addEventListener('click',async()=>{
+  if(scoreBusy)return;
   const ticket=epoch,sequence=change;
   try{const data=await request('progress');if(ticket!==epoch)return;if(sequence!==change){status('New answers were entered while loading. They are kept; load the online copy again when ready.');return;}const backedUp=store(`${KEY}-before-cloud-load`,state);meta={revision:data.revision,dirty:false};conflict=false;replaceProgress(data.progress||fresh());cacheMeta();accountUI();status(backedUp?'Online progress loaded. The previous device copy is backed up locally.':'Online progress loaded. Browser storage is unavailable, so the previous device copy could not be backed up.');}catch{if(ticket===epoch)status('Could not load online progress. Try again.');}
  });
@@ -115,6 +166,7 @@
   const url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='chemistry-quest-device-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  });
  $('import-guest').addEventListener('click',async()=>{
+  if(session){status('Account XP must be earned through server-checked answers. Guest XP cannot be imported.');return;}
   const guest=read(GUEST)||guestMemory;if(!guest){status('No guest progress was found in this browser.');return;}
   if(inFlight)return;
   const ticket=epoch,sequence=change;
@@ -124,7 +176,7 @@
   if(inFlight){status('Wait for the current sync to finish, then sign out.');return;}
   const token=session?.token;epoch++;clearTimeout(saveTimer);session=null;
   try{localStorage.removeItem(SESSION)}catch{}
-  KEY=GUEST;conflict=false;meta={revision:0,dirty:false};replaceProgress(read(GUEST)||guestMemory||fresh());accountUI();changeMode('login');
+  KEY=GUEST;pendingScore=null;conflict=false;meta={revision:0,dirty:false};replaceProgress(read(GUEST)||guestMemory||fresh());accountUI();changeMode('login');
   if(token)try{await request('logout',{},token)}catch{$('account-message').textContent='Signed out on this browser. The server session expires within 7 days.';}
  });
  window.addEventListener('online',flush);

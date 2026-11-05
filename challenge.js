@@ -31,11 +31,15 @@ function challengeTick() {
 }
 function startChallenge() {
  if(state.challenge?.status==='active')return;
+ const remote=globalThis.accountScoreAction?.('challenge-start',{},()=>{renderChallenge();challengeTick();});
+ if(remote)return remote;
  state.challenge={status:'active',deadline:Date.now()+30*60*1000,index:0,answers:{},reason:null};
  save();renderChallenge();challengeTick();
 }
 function finishChallenge(reason='submitted') {
  const c=state.challenge;if(!c||c.status!=='active')return;
+ const remote=reason!=='expired'&&globalThis.accountScoreAction?.('challenge-finish',{},()=>{renderChallenge();});
+ if(remote)return remote;
  c.status='finished';c.reason=reason;challengePending=null;
  if($('challenge-confirm').open)$('challenge-confirm').close('cancel');
  if($('challenge-finish-dialog').open)$('challenge-finish-dialog').close('cancel');
@@ -54,6 +58,12 @@ function commitChallengeAnswer(index,choice) {
  challengeTick();
  const c=state.challenge;if(!c||c.status!=='active'||c.index!==index||c.answers[index])return;
  const q=CHALLENGE_QUESTIONS[index],correct=choice===q.answer;
+ const remote=globalThis.accountScoreAction?.('challenge-answer',{id:q.id,choice},receipt=>{
+  stats();renderChallenge();showAnswerPopup(q,receipt.correct,receipt.earnedNow,receipt);
+  const level=Math.floor(state.xp/100)+1,oldLevel=Math.floor((state.xp-receipt.delta)/100)+1;
+  if(level>oldLevel)showLevelUp(level,receipt.delta);
+ });
+ if(remote)return remote;
  const reward=correct&&!state.challengeEarned[q.id]?q.xp:0;
  const oldLevel=Math.floor(state.xp/100)+1;
  c.answers[index]={choice,xp:reward};

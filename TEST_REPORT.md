@@ -26,3 +26,12 @@ Tested and fixed on 5 November 2026. This is a bounded functional test pass, not
 ## Limits
 
 Cloud edge cases were exercised through deterministic client integration tests with simulated API responses. This pass did not create real accounts, change passwords, rerun a security audit, or modify the live backend, database permissions, login lockout policy, or recovery mechanism. Existing recovery uses the private code saved at signup, not email delivery. Free service limits still apply.
+
+
+## Follow-up: server-calculated XP
+
+This requested update supersedes the earlier no-backend-changes scope. Installed `backend/scoring.sql` on the existing free project. No authentication policy, recovery method, existing credentials, or subscription was changed.
+
+The real database passed rolled-back tests for forged XP/streak/earned markers, six-answer bonus, five-wrong penalty, idempotent retries, fixed challenge awards, server-owned deadlines, late-answer rejection and explicit reset. Client checks passed for waiting for server rewards, trusting server feedback, double-click protection, forged-cache correction, offline refusal, lost-response recovery, challenge actions and reset. Existing guest, account isolation and regression checks passed too. A local browser fixture verified signed-in answer confirmation, 80 to 100 XP, level-up feedback and the account explanation. The fixture simulates the API; database scoring was verified separately in Supabase.
+
+Existing online XP is preserved as a grandfathered baseline. Guest XP remains browser-local and is no longer importable. Signed-in rewards require internet. Browser tools, display edits and answer lookups remain possible; arbitrary browser XP totals cannot change the saved account score.

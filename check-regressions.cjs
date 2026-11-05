@@ -18,7 +18,7 @@ function fixture({blocked=false,progress={version:2,xp:80},deferReads=false}={})
 }
 async function check(name,fn){try{await fn();outcomes.push({name,result:'PASS'})}catch(error){outcomes.push({name,result:'FAIL',detail:error.message});}}
 (async()=>{
- await check('Cloud restore and saving work with blocked browser storage',async()=>{const f=fixture({blocked:true});await f.login();assert.equal(f.app.run('state.xp'),80);f.app.run('submit(activeQuestion().answer)');await f.app.elements['sync-now'].listeners.click[0]();assert.equal(f.writes.at(-1).xp,100);});
+ await check('Cloud restore and saving work with blocked browser storage',async()=>{const f=fixture({blocked:true});await f.login();assert.equal(f.app.run('state.xp'),80);f.app.run('state.xp=100;save()');await f.app.elements['sync-now'].listeners.click[0]();assert.equal(f.writes.at(-1).xp,100);});
  await check('Guest progress survives signing out when storage is blocked',async()=>{const f=fixture({blocked:true,progress:null});f.app.run('state.xp=20;save()');await f.login();assert.equal(f.app.run('state.xp'),0);await f.app.elements['account-logout'].listeners.click[0]();assert.equal(f.app.run('state.xp'),20);});
  await check('Slow refresh preserves answers entered during loading',async()=>{
   const f=fixture({deferReads:true});await f.login();const refresh=f.app.elements['sync-now'].listeners.click[0]();
