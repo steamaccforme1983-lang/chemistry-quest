@@ -1,5 +1,5 @@
 'use strict';
-const KEY = 'chemistry-quest-v1';
+let KEY = 'chemistry-quest-v1';
 const $ = id => document.getElementById(id);
 const fresh = () => ({version:2,xp:0,streak:0,wrongStreak:0,best:0,quoteCursor:0,activity:{},topicTests:{},round:null,challenge:null,challengeEarned:{},results:{},filter:'all',current:null,response:null});
 function validDeck(ids,filter) {
@@ -148,6 +148,7 @@ function save() {
  try {localStorage.setItem(KEY,JSON.stringify(state)); storageOK = true;}
  catch {storageOK = false;}
  $('save-state').textContent = storageOK ? '● Progress saved on this device' : 'Progress is temporary · storage unavailable';
+ globalThis.queueCloudSave?.();
 }
 function missed() { return ALL_QUESTIONS.filter(q => state.results[q.id] && state.results[q.id].choice !== q.answer); }
 function pool() {

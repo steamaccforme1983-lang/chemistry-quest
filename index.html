@@ -6,7 +6,7 @@
   <meta name="description" content="A little chemistry, every day. Practise 16 TG EAPCET chemistry topic groups, earn XP, and build your confidence.">
   <title>Chemistry Quest · TG EAPCET</title>
   <link rel="stylesheet" href="styles.css">
-  <script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script>
+  <script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="account.js"></script>
 </head>
 <body>
 <div class="app">
@@ -21,7 +21,7 @@
   <div class="sidebar-note"><span>✧</span><p>Small steps.<br>Strong bonds.</p></div>
  </aside>
  <div class="main-wrap">
-  <header class="topbar"><span class="breadcrumb">Your daily dose of chemistry</span><span class="save-state" id="save-state"><span class="dot"></span> Progress saved on this device</span></header>
+  <header class="topbar"><span class="breadcrumb">Your daily dose of chemistry</span><div class="account-header"><span class="save-state" id="save-state"><span class="dot"></span> Progress saved on this device</span><button class="secondary" id="account-open">Sign in · Save online</button></div></header>
   <main>
    <section class="intro"><div><div class="eyebrow">LEARN A LITTLE. LEVEL UP.</div><h1>Let’s build some <em>chemistry.</em></h1><p>One question at a time. You’ve got this.</p></div><div class="atom" aria-hidden="true"><span></span><span></span><span></span><b></b></div></section>
    <section class="stats" aria-label="Your progress">
@@ -67,4 +67,17 @@
 <dialog id="about"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><span class="eyebrow">A LITTLE BETTER, EVERY DAY</span><h2>Make learning a habit.</h2><p>Choose a topic or mix all 16. Select an answer, then confirm when you’re sure. Only confirmed answers affect XP and streaks.</p><p><b>Earn 20 XP</b> the first time you answer each question correctly. Every 6th consecutive correct answer earns <b>24 XP (20% extra)</b> if that question hasn’t already awarded XP. Repeated correct answers award no extra XP. Every 100 current XP brings a level.</p><p><b>Every 5 consecutive wrong answers halve your current XP</b>, rounded down to a whole number. Another 5 wrong in the same streak halve it again. A correct answer resets the wrong streak; a wrong answer resets the correct streak. Levels can decrease when XP is lost. Cancelling a confirmation or skipping a question changes neither streak.</p><p>Review mistakes revisits questions whose latest answer was incorrect. Progress is stored in this browser on this device. These are original practice questions, not official past-paper questions or a complete syllabus.</p><button class="primary">Let’s practise →</button></form></dialog>
 <dialog id="reset-dialog"><form method="dialog"><h2>A fresh start?</h2><p>This clears all XP, answers, and streaks saved in this browser. You can’t undo it.</p><div class="dialog-actions"><button class="secondary" value="cancel">Keep my progress</button><button class="primary" value="reset">Reset everything</button></div></form></dialog>
 <dialog id="challenge-confirm" aria-labelledby="challenge-confirm-title"><form method="dialog"><h2 id="challenge-confirm-title">Are you sure this is the right answer?</h2><p id="challenge-choice" class="confirmation-choice"></p><p>The clock keeps running while you decide.</p><div class="dialog-actions"><button class="secondary" value="cancel" autofocus>Let me rethink</button><button class="primary" value="confirm">Yes, check my answer →</button></div></form></dialog>
+<dialog id="account-dialog" aria-labelledby="account-title">
+<button class="dialog-close" id="account-close" aria-label="Close account window">×</button>
+<span class="eyebrow">YOUR PROGRESS, ANYWHERE</span><h2 id="account-title">Welcome back.</h2>
+<div id="account-tabs" class="account-tabs"><button type="button" id="tab-login">Sign in</button><button type="button" id="tab-signup">Create account</button><button type="button" id="tab-recover">Forgot password?</button></div>
+<form id="account-form"><label for="account-email">Email</label><input id="account-email" type="email" autocomplete="username" required maxlength="254">
+<label id="password-label" for="account-password">Password</label><input id="account-password" type="password" autocomplete="current-password" required>
+<div id="recovery-input-wrap" hidden><label for="account-recovery">Your saved recovery code</label><input id="account-recovery" type="text" autocomplete="off" spellcheck="false"></div>
+<p id="account-help">Sign in to your Chemistry Quest account. Other services’ passwords won’t work here.</p><p id="account-message" role="status" aria-live="polite"></p>
+<button class="primary" id="account-submit" type="submit">Sign in →</button></form>
+<div id="account-manage" hidden><p id="account-identity"></p><p id="sync-status" role="status" aria-live="polite"></p><p>Only your account can load its progress. When using several devices, sync before switching.</p><div class="account-actions"><button class="secondary" id="sync-now">Sync now</button><button class="secondary" id="import-guest" hidden>Import guest progress</button><button class="secondary" id="account-logout">Sign out</button></div><p id="sync-conflict" hidden>Another device has newer progress. Your device copy is kept. Load the online copy to continue, or download this device’s copy first.</p><div class="account-actions" id="conflict-actions" hidden><button class="secondary" id="download-local">Download device copy</button><button class="secondary" id="load-cloud">Load online progress</button></div></div>
+<p class="account-footnote">Free within the service’s Free-plan limits. Recovery uses a private saved code, not an email link. Never share passwords or recovery codes.</p>
+</dialog>
+<dialog id="recovery-saved-dialog" aria-labelledby="recovery-saved-title"><span class="eyebrow">KEEP THIS SAFE</span><h2 id="recovery-saved-title">Save your recovery code.</h2><p>This code lets you reset a forgotten password. Store it in your password manager. It is only shown now. If you lose both your password and this code, we cannot recover your account.</p><label for="new-recovery-code">Recovery code</label><textarea id="new-recovery-code" rows="3" readonly spellcheck="false"></textarea><p id="recovery-rotation-note">A password reset creates a new code and invalidates the old one.</p><button class="primary" id="recovery-saved">I saved my recovery code →</button></dialog>
 </body></html>

@@ -6,7 +6,7 @@ The retake system adds 64 reviewed alternate questions (one variation per origin
 
 ## Run
 
-Open `index.html` in a modern browser. No installation, build step, API key, or account is required. For a stable localStorage origin, serve the `dist` folder:
+Open `index.html` in a modern browser. Guest practice needs no installation, build step, API key, or account. Account sync requires the configured hosted backend. For a stable localStorage origin, serve the `dist` folder:
 
 ```
 python -m http.server 4173
@@ -35,7 +35,7 @@ Then visit http://localhost:4173. Keep using the same browser and address to ret
 - Keyboard answer shortcuts (1–4), accessible buttons, mobile layout, reduced-motion support, and a confirmed progress reset.
 - Storage failures degrade to temporary in-memory progress with a visible status.
 
-`questions.js` contains the editable question bank; `app.js` implements interaction and persistence. `styles.css` contains the responsive design. Google Fonts is optional: system fallback fonts work without an internet connection. No analytics or application backend is used.
+`questions.js` contains the editable question bank; `app.js` implements interaction and persistence. `styles.css` contains the responsive design. Google Fonts is optional: system fallback fonts work without an internet connection. No analytics is used. Account features use the Supabase backend described below.
 
 Streak means consecutive correct responses, not consecutive calendar days. Mastery means a question has been answered correctly at least once. Original practice questions are not official past-paper questions and are not a claim of complete syllabus coverage.
 
@@ -47,4 +47,20 @@ Run `node check.cjs` for question-bank structure and app interaction checks, usi
 
 In Settings → Pages, choose Deploy from a branch, select main and / (root), and save. The site will be available at https://steamaccforme1983-lang.github.io/chemistry-quest/ after deployment succeeds.
 
-The site works on any device with a browser. Progress is saved separately on each browser/device; it does not sync through GitHub.
+The site works on any device with a browser. Guest progress is local; signed-in accounts sync through the dedicated backend, not through GitHub.
+
+## Accounts and recovery
+
+Use **Sign in · Save online** to create a Chemistry Quest account or sign in to an existing one. These accounts are separate from GitHub and Supabase dashboard accounts. Only the email address is used as the account identifier; this recovery-code version does not verify email ownership or send messages.
+
+- Passwords require at least 12 characters and at most 72 UTF-8 bytes. The backend stores bcrypt hashes (cost 10), never plaintext passwords.
+- A private, random 256-bit recovery code is shown after signup. Store it privately. **Forgot password?** requires email, the saved recovery code and a new password. Recovery rotates the code, invalidates every previous session, preserves progress and resets login lockout. With neither password nor recovery code, the account cannot be recovered. No email-reset delivery is configured.
+- Three incorrect logins trigger a server-enforced 5-minute lock. Another three after the lock expires trigger 20 minutes, then 80, 320, 1280, and a 24-hour cap. Requests during a lock do not extend it. A successful login resets escalation. Recovery-code failures have a separate identical limit. The limit applies across browsers/devices, including unknown email identifiers.
+- Sessions use random 256-bit opaque tokens, stored hashed on the server and expiring after seven days. Signing out revokes the current token; recovery revokes all tokens. The browser stores a session token and per-account progress cache, never passwords or recovery codes.
+- Progress syncs after changes with a short debounce. **Sync now** refreshes the latest saved progress when idle. Initial login restores online progress. A new account can explicitly import this browser’s guest progress.
+- Revision checks prevent a stale device from silently overwriting a newer save. If a conflict occurs, download the device copy if wanted and load online progress. A local backup is also retained. Sign-out and account switching keep guest and account data separate. Pending offline changes are kept locally and retried on reconnect or next login.
+- The frontend remains on GitHub Pages. The Free Supabase project hosts the API and private database. No paid plan was enabled; Free-plan limits and availability still apply. Backend source is in `backend/`. No project service key is committed or exposed to the browser. The edge endpoint validates its own sessions; Supabase’s legacy JWT gateway check is off for this function only.
+
+## Backend verification
+
+`backend/verify.sql` exercises lockout timing, isolation, recovery and stale saves inside a rolled-back transaction. `node check-account.cjs` verifies account switching and client sync behavior. The deployed API was also checked with synthetic QA credentials without printing or saving them. `backend/schema.sql` is the original one-time schema setup, not a script to rerun on an existing database.

@@ -20,18 +20,18 @@ class Element {
  close(value=''){this.returnValue=value;this.open=false;(this.listeners.close||[]).forEach(fn=>fn())}
  click(){if(!this.disabled)(this.listeners.click||[]).forEach(fn=>fn({target:this}))}
 }
-function boot(saved=null,blocked=false){
- let persisted=saved;const elements={};
+function boot(saved=null,blocked=false,extra={}){
+ let persisted=saved;const elements={},storage=new Map();if(saved)storage.set('chemistry-quest-v1',saved);
  const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
  for(const [tag,id] of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)){elements[id]=new Element();elements[id].hidden=/\bhidden(?:\s|>)/.test(tag);}
  const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),createTextNode:text=>({textContent:text}),body:new Element('body'),querySelector:()=>null,addEventListener(){},querySelectorAll:selector=>selector==='.topic'?elements.topics.children.filter(x=>x.className.split(' ').includes('topic')):[]};
- const context=vm.createContext({document,localStorage:{getItem(){if(blocked)throw Error('disabled');return persisted},setItem(k,v){if(blocked)throw Error('disabled');persisted=v}},setTimeout:()=>1,setInterval:()=>1,clearTimeout(){},console});
+ const context=vm.createContext({document,localStorage:{getItem(k){if(blocked)throw Error('disabled');return storage.get(k)||null},setItem(k,v){if(blocked)throw Error('disabled');storage.set(k,v);persisted=v},removeItem(k){storage.delete(k)}},setTimeout:()=>1,setInterval:()=>1,clearTimeout(){},console,...extra});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'questions.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'variants.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'app.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'challenge.js'),'utf8'),context);
  vm.runInContext("function submit(choice){answer(choice);if(document.getElementById('confirm-answer').open)document.getElementById('confirm-answer').close('confirm')}",context);
- return {run:code=>vm.runInContext(code,context),snapshot:()=>JSON.parse(persisted),saved:()=>persisted,elements};
+ return {run:code=>vm.runInContext(code,context),snapshot:()=>JSON.parse(storage.get(vm.runInContext('KEY',context))),saved:()=>storage.get(vm.runInContext('KEY',context)),elements,storage,context};
 }
 const app=boot();
 assert.equal(app.snapshot().xp,0);
@@ -232,3 +232,4 @@ randomReload.run("setFilter('all');startRetake('random')");
 assert.equal(randomReload.snapshot().round.ids.length,64);
 assert.equal(randomReload.run('new Set(pool().map(q=>q.topic)).size'),16);
 console.log('PASS: same/random retakes; 64 reviewed variants; round scores and reload locks; saved decks and lifetime counters; practice/challenge scoring; streaks; level-ups; timer expiry; reset and migration.');
+module.exports={boot};
