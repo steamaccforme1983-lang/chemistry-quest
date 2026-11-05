@@ -77,3 +77,18 @@ Account submissions require an internet connection. XP is shown after the server
 Developer tools cannot be disabled reliably. A visitor may change their own display or guest save, read the public study question bank, look up answers, or automate correct submissions. This change protects saved account scores from arbitrary browser totals; it is not exam proctoring or protection against answer lookups.
 
 Run `backend/verify-scoring.sql` after installing scoring; it exercises forged uploads, grading, streaks, retries, challenge timing and reset inside a rolled-back transaction. The older `backend/verify.sql` targets the pre-scoring schema and should only be used before this migration.
+
+
+## Install on Android and Windows
+
+This is an installable Progressive Web App (PWA), using the existing free GitHub Pages address. It is installed through a supported browser, with an app icon and standalone window. It is not an APK, EXE, Play Store or Microsoft Store release. No developer-store registration or paid service is needed.
+
+- Android: open https://steamaccforme1983-lang.github.io/chemistry-quest/ in Chrome. Use **Install app** near the bottom of the page. If the direct install button is unavailable, use the browser menu: **Add to Home screen**, then **Install** if offered.
+- Windows: open the same address in Edge or Chrome. Use the browser's install icon in the address bar or its Apps/install menu. The installed app appears in the system's app list and can be pinned.
+- Keep the same browser profile for existing guest progress. Sign in to the same Chemistry Quest account to restore online progress on another device. Account XP is still calculated on the server and needs internet.
+- Complete the first online visit, then reopen for offline guest practice. Browsers may clear offline files under storage pressure. Clearing site data removes local guest progress and the offline cache.
+- Updates download in the background, then activate when all app windows/tabs close. We avoid forced reloads during answers or challenges. Reopen the app online to check for updates.
+
+`manifest.webmanifest`, `install.js`, `sw.js` and `icons/` provide installation and offline files. The service worker caches only this app's public shell; it does not cache sign-ins, account responses or cross-origin requests. Cache cleanup is restricted to this app's own cache prefix. **Bump the cache version in sw.js whenever a shell file changes**, and update check-pwa.cjs to match, so a release remains coherent offline.
+
+Run `node check-pwa.cjs` for manifest/icon dimensions, offline cache behavior, API exclusions, update-cache isolation and install UI event checks. Actual OS installation remains a user step; device/browser policy may affect availability.

@@ -35,3 +35,10 @@ This requested update supersedes the earlier no-backend-changes scope. Installed
 The real database passed rolled-back tests for forged XP/streak/earned markers, six-answer bonus, five-wrong penalty, idempotent retries, fixed challenge awards, server-owned deadlines, late-answer rejection and explicit reset. Client checks passed for waiting for server rewards, trusting server feedback, double-click protection, forged-cache correction, offline refusal, lost-response recovery, challenge actions and reset. Existing guest, account isolation and regression checks passed too. A local browser fixture verified signed-in answer confirmation, 80 to 100 XP, level-up feedback and the account explanation. The fixture simulates the API; database scoring was verified separately in Supabase.
 
 Existing online XP is preserved as a grandfathered baseline. Guest XP remains browser-local and is no longer importable. Signed-in rewards require internet. Browser tools, display edits and answer lookups remain possible; arbitrary browser XP totals cannot change the saved account score.
+
+
+## Follow-up: Android and Windows installable app
+
+Added a scoped web-app manifest with 192/512 PNG icons and a maskable icon; a standalone display mode; click-only install prompting with Android/Windows instructions; offline guest files and a connection notice; and safe deferred updates. No backend changes or paid services were needed.
+
+`check-pwa.cjs` passed manifest/icon size validation, shell asset existence, offline shell responses, scoped cache cleanup, POST/API/cross-origin exclusions, install prompt dismissal, standalone behavior and unsupported-browser fallback. Existing practice/account/scoring/regression checks passed. Browser QA at desktop and 390 by 844 checked the install help. After stopping the local server, cached navigation, answering a question, +20 guest XP and reload persistence worked. This is a browser-installed PWA; an actual Android device or Windows OS install was not performed during QA.

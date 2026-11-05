@@ -5,8 +5,14 @@
   <meta name="theme-color" content="#147563">
   <meta name="description" content="A little chemistry, every day. Practise 16 TG EAPCET chemistry topic groups, earn XP, and build your confidence.">
   <title>Chemistry Quest · TG EAPCET</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="styles.css">
-  <script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="account.js"></script>
+  <script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
 </head>
 <body>
 <div class="app">
@@ -43,7 +49,8 @@
    <div class="below-card"><span><span class="keycap">1</span> – <span class="keycap">4</span> to answer <span class="keycap enter">Enter</span> to continue</span><span>No timer. Just progress.</span></div>
    <section class="challenge-card" aria-labelledby="challenge-title"><div class="challenge-top"><div><span class="eyebrow">THE NEXT LEVEL</span><h2 id="challenge-title">JEE Chemistry Challenge</h2><p>10 hard JEE-style MCQs · 30 minutes · 50–90 XP per new correct answer.</p></div><strong id="challenge-timer" class="challenge-timer" role="timer" aria-label="Time remaining">30:00</strong></div><p class="challenge-rules">Original practice questions, not official past-paper questions. Fixed rewards; practice streak bonuses and penalties stay in practice mode. The timer keeps running if you leave or reload.</p><div id="challenge-content"></div><button id="challenge-start" class="primary">Start challenge →</button></section>
    <section class="coverage"><div><span class="tiny-orbit">◎</span><div><h3>Your syllabus, in small bites.</h3><p>16 topic groups · 128 explained questions · 3 branches of chemistry</p></div></div><button id="about-button" class="text-button">How it works ↗</button></section>
-   <footer><span>Made for your next “oh, I get it.”</span><button id="reset-button" class="text-button">Reset progress</button></footer>
+   <p id="app-connection" class="app-connection" role="status" hidden>You’re offline. Guest practice is available after offline setup. Sign in and account XP need internet.</p>
+   <footer><span>Made for your next “oh, I get it.”</span><div class="footer-actions"><button id="install-open" class="text-button">Install app</button><button id="reset-button" class="text-button">Reset progress</button></div></footer>
   </main>
  </div>
 </div>
@@ -81,5 +88,6 @@
 <p class="account-footnote">Free within the service’s Free-plan limits. Recovery uses a private saved code, not an email link. Never share passwords or recovery codes.</p>
 </dialog>
 <dialog id="recovery-saved-dialog" aria-labelledby="recovery-saved-title"><span class="eyebrow">KEEP THIS SAFE</span><h2 id="recovery-saved-title">Save your recovery code.</h2><p>This code lets you reset a forgotten password. Store it in your password manager. It is only shown now. If you lose both your password and this code, we cannot recover your account.</p><label for="new-recovery-code">Recovery code</label><textarea id="new-recovery-code" rows="3" readonly spellcheck="false"></textarea><p id="recovery-rotation-note">A password reset creates a new code and invalidates the old one.</p><button class="primary" id="recovery-saved">I saved my recovery code →</button></dialog>
+<dialog id="install-dialog" aria-labelledby="install-title"><form method="dialog"><button class="dialog-close" aria-label="Close install help">×</button><span class="eyebrow">ANDROID + WINDOWS</span><h2 id="install-title">Take Chemistry Quest with you.</h2><p>Install the free web app for a home-screen icon and its own window. Your account and online progress work across devices when you sign in.</p><div class="install-platform"><h3>Android</h3><p>Open this website in Chrome. Open the ⋮ menu, choose <b>Add to Home screen</b>, then <b>Install</b> if offered.</p></div><div class="install-platform"><h3>Windows</h3><p>Open this website in Edge or Chrome. Click the install icon in the address bar, or open the browser menu and look for <b>Apps → Install this site as an app</b> or <b>Install Chemistry Quest</b>.</p></div><p>Guest practice can work offline after the first complete online visit. Guest progress stays in this browser profile. Signed-in answers, XP and cloud sync require internet.</p><p id="install-status" role="status" aria-live="polite">Setting up offline practice…</p><div class="dialog-actions"><button type="button" id="install-now" class="primary" hidden>Install Chemistry Quest</button><button class="secondary" value="close">Got it</button></div></form></dialog>
 </body></html>
 
