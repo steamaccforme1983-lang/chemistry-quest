@@ -188,7 +188,7 @@
   const app=document.querySelector('.app');app.inert=true;$('account-open').disabled=true;
   request('progress',{},previous.token).then(data=>receiveAccount({...data,token:previous.token})).catch(error=>{
    if(error.status===401){try{localStorage.removeItem(SESSION)}catch{}status('Please sign in again.');}
-   else {session=previous;KEY=`chemistry-quest-account-${previous.user.id}`;meta=read(metaKey(),{revision:0,dirty:false});replaceProgress(read(KEY)||fresh());status('Offline. Your account progress is saved on this device; sync when online.');accountUI();}
+   else {session=previous;KEY=`chemistry-quest-account-${previous.user.id}`;pendingScore=read(`${KEY}-pending-score`);meta=read(metaKey(),{revision:0,dirty:false});replaceProgress(read(KEY)||fresh());status('Offline. Your account progress is saved on this device; sync when online.');accountUI();}
   }).finally(()=>{app.inert=false;$('account-open').disabled=false;});
  }
 })();
