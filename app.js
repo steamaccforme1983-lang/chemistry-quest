@@ -7,9 +7,9 @@ function validDeck(ids,filter) {
  return Array.isArray(ids)&&ids.length===base.length&&new Set(ids).size===ids.length&&base.every(q=>ids.includes(q.id)||ids.includes(`v-${q.id}`));
 }
 let storageOK = true;
-function load() {
+function load(snapshot) {
  try {
-  const raw = JSON.parse(localStorage.getItem(KEY));
+  const raw = snapshot===undefined ? JSON.parse(localStorage.getItem(KEY)) : JSON.parse(JSON.stringify(snapshot));
   if(!raw || ![1,2].includes(raw.version)) return fresh();
   const state = fresh();
   for(const q of ALL_QUESTIONS) {
@@ -367,7 +367,12 @@ $('confirm-answer').addEventListener('close',()=>{
  if($('confirm-answer').returnValue==='confirm' && selection?.id===state.current) commitAnswer(selection.choice);
 });
 $('about-button').addEventListener('click',()=>$('about').showModal());
-$('reset-button').addEventListener('click',()=>$('reset-dialog').showModal());
+$('reset-button').addEventListener('click',()=>{
+ $('reset-description').textContent=KEY==='chemistry-quest-v1'
+  ? 'This clears all XP, answers, and streaks saved in this browser. You can’t undo it.'
+  : 'This resets your account’s XP, answers, streaks, and challenge progress. The reset will sync online and appear on your other devices. You can’t undo it.';
+ $('reset-dialog').showModal();
+});
 $('reset-dialog').addEventListener('close',()=>{if($('reset-dialog').returnValue==='reset'){dismissAnswerPopup();state=fresh();reviewQueue=[];render(true);save();toast('Fresh start. Let’s build from here.');}});
 document.addEventListener('keydown',event=>{
  if(document.querySelector('dialog[open]') || event.target.closest?.('.challenge-card') || /SELECT|INPUT|TEXTAREA/.test(event.target.tagName) || event.altKey || event.ctrlKey || event.metaKey)return;

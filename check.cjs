@@ -24,7 +24,8 @@ function boot(saved=null,blocked=false,extra={}){
  let persisted=saved;const elements={},storage=new Map();if(saved)storage.set('chemistry-quest-v1',saved);
  const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
  for(const [tag,id] of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)){elements[id]=new Element();elements[id].hidden=/\bhidden(?:\s|>)/.test(tag);}
- const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),createTextNode:text=>({textContent:text}),body:new Element('body'),querySelector:()=>null,addEventListener(){},querySelectorAll:selector=>selector==='.topic'?elements.topics.children.filter(x=>x.className.split(' ').includes('topic')):[]};
+ const appElement=new Element('main');
+ const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),createTextNode:text=>({textContent:text}),body:new Element('body'),querySelector:selector=>selector==='.app'?appElement:null,addEventListener(){},querySelectorAll:selector=>selector==='.topic'?elements.topics.children.filter(x=>x.className.split(' ').includes('topic')):[]};
  const context=vm.createContext({document,localStorage:{getItem(k){if(blocked)throw Error('disabled');return storage.get(k)||null},setItem(k,v){if(blocked)throw Error('disabled');storage.set(k,v);persisted=v},removeItem(k){storage.delete(k)}},setTimeout:()=>1,setInterval:()=>1,clearTimeout(){},console,...extra});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'questions.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'variants.js'),'utf8'),context);

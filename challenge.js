@@ -38,6 +38,7 @@ function finishChallenge(reason='submitted') {
  const c=state.challenge;if(!c||c.status!=='active')return;
  c.status='finished';c.reason=reason;challengePending=null;
  if($('challenge-confirm').open)$('challenge-confirm').close('cancel');
+ if($('challenge-finish-dialog').open)$('challenge-finish-dialog').close('cancel');
  save();renderChallenge();
  if(reason==='expired')toast('Time’s up! Your challenge results are ready.');
 }
@@ -67,6 +68,7 @@ function commitChallengeAnswer(index,choice) {
 function renderChallenge() {
  const content=$('challenge-content');content.replaceChildren();
  const c=state.challenge;
+ $('challenge-timer').classList.toggle('time-low',c?.status==='active'&&challengeTimeLeft()<=300);
  $('challenge-start').hidden=c?.status==='active';
  $('challenge-start').textContent=c?'Retry challenge →':'Start challenge →';
  if(!c){$('challenge-timer').textContent='30:00';return;}
@@ -77,7 +79,7 @@ function renderChallenge() {
   const title=document.createElement('h3');title.textContent=`${correct} / 10 correct · ${xp} XP earned`;
   const p=document.createElement('p');p.textContent=`${answered} answered · ${answered-correct} wrong · ${10-answered} unanswered. Retry for practice; each question awards XP once.`;
   content.append(title,p);
-  CHALLENGE_QUESTIONS.forEach((q,i)=>{const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent=`${i+1}. ${c.answers[i]?(c.answers[i].choice===q.answer?'✓ Correct':'× Wrong'):'Unanswered'} · ${TOPICS[q.topic][0]}`;const text=document.createElement('p');text.textContent=`${q.prompt} Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}. ${q.explanation}`;details.append(summary,text);content.append(details)});
+  CHALLENGE_QUESTIONS.forEach((q,i)=>{const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent=`${i+1}. ${c.answers[i]?(c.answers[i].choice===q.answer?'✓ Correct':'× Wrong'):'Unanswered'} · ${TOPICS[q.topic][0]}`;const text=document.createElement('p');const chosen=c.answers[i];text.textContent=`${q.prompt} ${chosen?`Your answer: ${'ABCD'[chosen.choice]}. ${q.options[chosen.choice]}.`:'You did not answer this question.'} Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}. ${q.explanation}`;details.append(summary,text);content.append(details)});
   return;
  }
  const nav=document.createElement('div');nav.className='challenge-nav';nav.setAttribute('aria-label','Challenge questions');
@@ -91,10 +93,11 @@ function renderChallenge() {
  if(a){const explanation=document.createElement('p');explanation.className=`feedback${a.choice===q.answer?'':' incorrect'}`;explanation.textContent=`${a.choice===q.answer?'Correct':'Not quite'} · +${a.xp} XP. ${q.explanation}`;content.append(explanation)}
  const actions=document.createElement('div');actions.className='challenge-actions';
  const next=document.createElement('button');next.className='secondary';next.textContent=a?'Next question →':'Skip for now →';next.addEventListener('click',()=>{challengeTick();if(c.status!=='active')return;c.index=(c.index+1)%10;save();renderChallenge()});
- const finish=document.createElement('button');finish.className='text-button';finish.textContent='Finish attempt';finish.addEventListener('click',()=>finishChallenge());actions.append(next,finish);content.append(actions);
+ const finish=document.createElement('button');finish.className='text-button';finish.textContent='Finish attempt';finish.addEventListener('click',()=>{challengeTick();if(c.status!=='active')return;$('challenge-finish-description').textContent=`You have answered ${Object.keys(c.answers).length} of 10 questions. Submit now? Unanswered questions earn no XP. The clock keeps running while you decide.`;$('challenge-finish-dialog').returnValue='';$('challenge-finish-dialog').showModal();});actions.append(next,finish);content.append(actions);
 }
 $('challenge-start').addEventListener('click',startChallenge);
 $('challenge-confirm').addEventListener('close',()=>{const pending=challengePending;challengePending=null;if($('challenge-confirm').returnValue==='confirm'&&pending)commitChallengeAnswer(pending.index,pending.choice)});
+$('challenge-finish-dialog').addEventListener('close',()=>{if($('challenge-finish-dialog').returnValue==='finish'){challengeTick();finishChallenge();}});
 $('reset-dialog').addEventListener('close',()=>{if($('reset-dialog').returnValue==='reset'){visitCounts={correct:0,wrong:0};challengePending=null;renderCounts();renderChallenge();}});
 document.addEventListener('visibilitychange',challengeTick);
 validateChallenge();renderChallenge();challengeTick();save();
