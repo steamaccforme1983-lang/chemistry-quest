@@ -92,3 +92,5 @@ This is an installable Progressive Web App (PWA), using the existing free GitHub
 `manifest.webmanifest`, `install.js`, `sw.js` and `icons/` provide installation and offline files. The service worker caches only this app's public shell; it does not cache sign-ins, account responses or cross-origin requests. Cache cleanup is restricted to this app's own cache prefix. **Bump the cache version in sw.js whenever a shell file changes**, and update check-pwa.cjs to match, so a release remains coherent offline.
 
 Run `node check-pwa.cjs` for manifest/icon dimensions, offline cache behavior, API exclusions, update-cache isolation and install UI event checks. Actual OS installation remains a user step; device/browser policy may affect availability.
+
+Open Install app in the footer for Android and Windows installation help.
