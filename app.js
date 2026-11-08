@@ -1,7 +1,7 @@
 'use strict';
-let KEY = 'chemistry-quest-v1';
+let KEY = GUEST_PROGRESS_KEY;
 const $ = id => document.getElementById(id);
-const fresh = () => ({version:2,xp:0,streak:0,wrongStreak:0,best:0,quoteCursor:0,activity:{},topicTests:{},round:null,challenge:null,challengeEarned:{},results:{},filter:'all',current:null,response:null});
+const fresh = () => ({version:2,xp:0,streak:0,wrongStreak:0,best:0,quoteCursor:0,stickerLevel:1,avatarLevel:1,activity:{},topicTests:{},round:null,challenge:null,challengeEarned:{},results:{},filter:'all',current:null,response:null});
 function validDeck(ids,filter) {
  const base=filter==='all'?QUESTIONS:QUESTIONS.filter(q=>q.topic===Number(filter));
  return Array.isArray(ids)&&ids.length===base.length&&new Set(ids).size===ids.length&&base.every(q=>ids.includes(q.id)||ids.includes(`v-${q.id}`));
@@ -27,6 +27,11 @@ function load(snapshot) {
   // Old saves migrate without losing mastery. New balances include bonuses and penalties.
   state.xp = raw.version === 2 && Number.isSafeInteger(raw.xp) && raw.xp >= 0
    ? raw.xp : Object.values(state.results).filter(r => r.earned).length * 20;
+  if (KEY === GUEST_PROGRESS_KEY) {
+   const savedLevel = Number.isSafeInteger(raw.stickerLevel) ? raw.stickerLevel : 1;
+   state.stickerLevel = Math.min(MAX_STICKER_LEVEL, Math.max(savedLevel, Math.floor(state.xp / 100) + 1));
+   if (Number.isInteger(raw.avatarLevel) && raw.avatarLevel >= 1 && raw.avatarLevel <= state.stickerLevel) state.avatarLevel = raw.avatarLevel;
+  }
   state.streak = Number.isSafeInteger(raw.streak) && raw.streak >= 0 ? raw.streak : 0;
   state.best = Math.max(state.streak,Number.isSafeInteger(raw.best) && raw.best >= 0 ? raw.best : 0);
   state.wrongStreak = !state.streak && Number.isSafeInteger(raw.wrongStreak) && raw.wrongStreak >= 0 ? raw.wrongStreak : 0;
@@ -94,6 +99,17 @@ function showLevelUp(level,delta=state.response?.delta||0) {
  $('level-up-title').textContent=`Congratulations! You reached Level ${level}.`;
  $('level-up-quote').textContent=`“${MOTIVATION[state.quoteCursor % MOTIVATION.length]}”`;
  $('level-up-reward').textContent=`+${delta} XP earned · ${state.xp} XP total`;
+ const guestSticker = KEY === GUEST_PROGRESS_KEY && level <= MAX_STICKER_LEVEL;
+ $('level-sticker').hidden = !guestSticker;
+ if (guestSticker) {
+  const sticker = stickerForLevel(level);
+  $('level-sticker-image').src = sticker.image;
+  $('level-sticker-name').textContent = sticker.name;
+  const equip = $('equip-level-sticker');
+  equip.dataset.level = level;
+  equip.disabled = state.avatarLevel === level;
+  equip.textContent = equip.disabled ? 'Profile picture equipped' : 'Use as profile picture';
+ }
  state.quoteCursor=(state.quoteCursor+1)%MOTIVATION.length;
  save();
  $('level-up-popup').hidden=false;
@@ -145,6 +161,7 @@ function showAnswerPopup(q,correct,earnedNow,response=state.response) {
  answerPopupTimer=setTimeout(dismissAnswerPopup,4000);
 }
 function save() {
+ if (KEY === GUEST_PROGRESS_KEY) state.stickerLevel = Math.min(MAX_STICKER_LEVEL, Math.max(state.stickerLevel, Math.floor(state.xp / 100) + 1));
  try {localStorage.setItem(KEY,JSON.stringify(state)); storageOK = true;}
  catch {storageOK = false;}
  $('save-state').textContent = storageOK ? '● Progress saved on this device' : 'Progress is temporary · storage unavailable';
@@ -183,6 +200,7 @@ function startRetake(mode) {
  render(true);save();
 }
 function stats() {
+ updateGuestProfile();
  renderCounts();
  const level = Math.floor(state.xp/100)+1, progress=state.xp%100;
  $('level').textContent = level;
@@ -369,6 +387,17 @@ $('next').addEventListener('click',next);
 $('retake-same').addEventListener('click',()=>startRetake('same'));
 $('retake-random').addEventListener('click',()=>startRetake('random'));
 $('dismiss-answer-popup').addEventListener('click',dismissAnswerPopup);
+$('guest-profile-open').addEventListener('click', () => {
+ if (KEY !== GUEST_PROGRESS_KEY) return;
+ renderGuestStickers();
+ $('guest-profile-status').textContent = `Current picture: ${stickerForLevel(state.avatarLevel).name}`;
+ $('guest-profile').showModal();
+});
+$('equip-level-sticker').addEventListener('click', event => {
+ equipGuestSticker(Number(event.target.dataset.level));
+ event.target.textContent = 'Profile picture equipped';
+ event.target.disabled = true;
+});
 $('dismiss-level-up').addEventListener('click',()=>{dismissLevelUp();clearConfetti();});
 $('confirm-answer').addEventListener('close',()=>{
  const selection=pendingAnswer;pendingAnswer=null;
@@ -377,7 +406,7 @@ $('confirm-answer').addEventListener('close',()=>{
 $('about-button').addEventListener('click',()=>$('about').showModal());
 $('reset-button').addEventListener('click',()=>{
  $('reset-description').textContent=KEY==='chemistry-quest-v1'
-  ? 'This clears all XP, answers, and streaks saved in this browser. You can’t undo it.'
+  ? 'This clears your guest XP, answers, streaks, and stickers on this device. You can’t undo it.'
   : 'This resets your account’s XP, answers, streaks, and challenge progress. The reset will sync online and appear on your other devices. You can’t undo it.';
  $('reset-dialog').showModal();
 });

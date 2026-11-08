@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="styles.css">
-  <script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
+  <script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="stickers.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
 </head>
 <body>
 <div class="app">
@@ -27,7 +27,7 @@
   <div class="sidebar-note"><span>✧</span><p>Small steps.<br>Strong bonds.</p></div>
  </aside>
  <div class="main-wrap">
-  <header class="topbar"><span class="breadcrumb">Your daily dose of chemistry</span><div class="account-header"><span class="save-state" id="save-state"><span class="dot"></span> Progress saved on this device</span><button class="secondary" id="account-open">Sign in · Save online</button></div></header>
+  <header class="topbar"><span class="breadcrumb">Your daily dose of chemistry</span><div class="account-header"><span class="save-state" id="save-state"><span class="dot"></span> Progress saved on this device</span><button id="guest-profile-open" class="guest-profile-button" aria-label="Guest profile" title="Guest profile"><img id="guest-avatar" src="icons/icon.svg" alt=""></button><button class="secondary" id="account-open">Sign in · Save online</button></div></header>
   <main>
    <section class="intro"><div><div class="eyebrow">LEARN A LITTLE. LEVEL UP.</div><h1>Let’s build some <em>chemistry.</em></h1><p>One question at a time. You’ve got this.</p></div><div class="atom" aria-hidden="true"><span></span><span></span><span></span><b></b></div></section>
    <section class="stats" aria-label="Your progress">
@@ -68,6 +68,7 @@
  <h2 id="level-up-title"></h2>
  <p id="level-up-reward" class="level-up-reward"></p>
  <blockquote id="level-up-quote"></blockquote>
+ <div id="level-sticker" class="level-sticker" hidden><img id="level-sticker-image" alt=""><div><strong id="level-sticker-name"></strong><button id="equip-level-sticker" class="secondary" type="button">Use as profile picture</button></div></div>
  <button id="dismiss-level-up" class="primary">Keep going →</button>
 </section>
 <dialog id="confirm-answer" aria-labelledby="confirmation-title" aria-describedby="confirmation-stakes"><form method="dialog"><span class="eyebrow">ONE LAST LOOK</span><h2 id="confirmation-title">Are you sure this is the right answer?</h2><p id="confirmation-choice" class="confirmation-choice"></p><p id="confirmation-stakes"></p><div class="dialog-actions"><button class="secondary" value="cancel" autofocus>Let me rethink</button><button class="primary" value="confirm">Yes, check my answer →</button></div></form></dialog>
@@ -89,5 +90,6 @@
 </dialog>
 <dialog id="recovery-saved-dialog" aria-labelledby="recovery-saved-title"><span class="eyebrow">KEEP THIS SAFE</span><h2 id="recovery-saved-title">Save your recovery code.</h2><p>This code lets you reset a forgotten password. Store it in your password manager. It is only shown now. If you lose both your password and this code, we cannot recover your account.</p><label for="new-recovery-code">Recovery code</label><textarea id="new-recovery-code" rows="3" readonly spellcheck="false"></textarea><p id="recovery-rotation-note">A password reset creates a new code and invalidates the old one.</p><button class="primary" id="recovery-saved">I saved my recovery code →</button></dialog>
 <dialog id="install-dialog" aria-labelledby="install-title"><form method="dialog"><button class="dialog-close" aria-label="Close install help">×</button><span class="eyebrow">ANDROID + WINDOWS</span><h2 id="install-title">Take Chemistry Quest with you.</h2><p>Install the free web app for a home-screen icon and its own window. Your account and online progress work across devices when you sign in.</p><div class="install-platform"><h3>Android</h3><p>Open this website in Chrome. Open the ⋮ menu, choose <b>Add to Home screen</b>, then <b>Install</b> if offered.</p></div><div class="install-platform"><h3>Windows</h3><p>Open this website in Edge or Chrome. Click the install icon in the address bar, or open the browser menu and look for <b>Apps → Install this site as an app</b> or <b>Install Chemistry Quest</b>.</p></div><p>Guest practice can work offline after the first complete online visit. Guest progress stays in this browser profile. Signed-in answers, XP and cloud sync require internet.</p><p id="install-status" role="status" aria-live="polite">Setting up offline practice…</p><div class="dialog-actions"><button type="button" id="install-now" class="primary" hidden>Install Chemistry Quest</button><button class="secondary" value="close">Got it</button></div></form></dialog>
+<dialog id="guest-profile" aria-labelledby="guest-profile-title"><form method="dialog"><button class="dialog-close" aria-label="Close guest profile">×</button><span class="eyebrow">STICKER COLLECTION</span><h2 id="guest-profile-title">Guest profile</h2><p>Level up to collect anime-style stickers. Pick any sticker below to use as your profile picture on this device.</p><div id="guest-stickers" class="guest-stickers"></div><p id="guest-profile-status" role="status"></p><button class="primary">Done</button></form></dialog>
 </body></html>
 

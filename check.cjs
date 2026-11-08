@@ -29,6 +29,7 @@ function boot(saved=null,blocked=false,extra={}){
  const context=vm.createContext({document,localStorage:{getItem(k){if(blocked)throw Error('disabled');return storage.get(k)||null},setItem(k,v){if(blocked)throw Error('disabled');storage.set(k,v);persisted=v},removeItem(k){storage.delete(k)}},setTimeout:()=>1,setInterval:()=>1,clearTimeout(){},console,...extra});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'questions.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'variants.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'stickers.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'app.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'challenge.js'),'utf8'),context);
  vm.runInContext("function submit(choice){answer(choice);if(document.getElementById('confirm-answer').open)document.getElementById('confirm-answer').close('confirm')}",context);
