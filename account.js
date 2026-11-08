@@ -15,7 +15,9 @@
   $('account-open').textContent=session?'My account':'Sign in · Save online';
   $('account-tabs').hidden=!!session;$('account-form').hidden=!!session;$('account-manage').hidden=!session;
   $('account-title').textContent=session?'Your study account.':mode==='signup'?'Create your account.':mode==='recover'?'Reset your password.':'Welcome back.';
-  if(session)$('account-identity').textContent=session.user.email;
+  if(session){
+   $('account-identity').textContent=state.displayName ? `${state.displayName} · ${session.user.email}` : session.user.email;
+  }
   $('sync-conflict').hidden=!conflict;$('conflict-actions').hidden=!conflict;
  }
  async function request(action,args={},token=session?.token){
@@ -66,7 +68,7 @@
   if(scoreBusy)return;
   scoreBusy=true;
   const ticket=epoch,app=document.querySelector('.app');
-  app.inert=true;$('account-dialog').inert=true;
+  app.inert=true;$('account-dialog').inert=true;$('guest-profile').inert=true;
   clearTimeout(saveTimer);
   try{
    await flush();
@@ -96,7 +98,7 @@
    else if(error.status&&error.status<500&&error.status!==429){pendingScore=null;try{localStorage.removeItem(`${KEY}-pending-score`)}catch{}}
    const message=error.status===409?'Online progress changed. Open My account and load the online copy.':error.message||'Could not check this answer. Retry when online.';
    status(message);toast(message);
-  }finally{inFlight=false;scoreBusy=false;app.inert=false;$('account-dialog').inert=false;}
+  }finally{inFlight=false;scoreBusy=false;app.inert=false;$('account-dialog').inert=false;$('guest-profile').inert=false;}
  }
  async function receiveAccount(data){
   if(KEY===GUEST)guestMemory=JSON.parse(JSON.stringify(state));
@@ -144,6 +146,7 @@
    $('account-message').textContent=error.message+(Number.isInteger(error.attemptsLeft)?` ${error.attemptsLeft} attempts left.`:'');
   }finally{busy=false;updateCountdown();}
  });
+ $('guest-profile').addEventListener('close',accountUI);
  $('account-open').addEventListener('click',()=>{accountUI();$('account-dialog').showModal();});
  $('account-close').addEventListener('click',()=>{if(!busy)$('account-dialog').close();});
  $('account-dialog').addEventListener('cancel',event=>{if(busy)event.preventDefault();});
@@ -155,7 +158,7 @@
   if(pendingScore){await runScore('recover',{});return;}
   if(meta.dirty){await flush();return;}
   const ticket=epoch,sequence=change;
-  try{const data=await request('progress');if(!session||ticket!==epoch)return;if(sequence!==change||meta.dirty){if(meta.dirty)await flush();return;}meta.revision=data.revision;replaceProgress(data.progress||fresh());cacheMeta();status('Loaded your latest online progress ✓');}catch{if(ticket===epoch)status(`Could not refresh. ${deviceSafety()}`);}
+  try{const data=await request('progress');if(!session||ticket!==epoch)return;if(sequence!==change||meta.dirty){if(meta.dirty)await flush();return;}meta.revision=data.revision;replaceProgress(data.progress||fresh());cacheMeta();accountUI();status('Loaded your latest online progress ✓');}catch{if(ticket===epoch)status(`Could not refresh. ${deviceSafety()}`);}
  });
  $('load-cloud').addEventListener('click',async()=>{
   if(scoreBusy)return;

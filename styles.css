@@ -56,3 +56,7 @@
 .level-sticker div{display:grid;gap:5px}
 .level-sticker[hidden]{display:none}
 @media(max-width:600px){.account-header{gap:6px}.guest-profile-button img{width:28px;height:28px}}
+
+.profile-label{display:block;font-weight:700;font-size:13px;margin:14px 0 6px}
+#profile-name{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--ink);background:#fff}
+#profile-name:focus-visible{outline:2px solid var(--green);outline-offset:2px}

@@ -43,21 +43,39 @@ function stickerForLevel(level) {
  return {name:`${color} ${style}`, image:'data:image/svg+xml,'+encodeURIComponent(svg)};
 }
 
-function updateGuestProfile() {
- const guest = KEY === GUEST_PROGRESS_KEY;
- $('guest-profile-open').hidden = !guest;
- if (guest) $('guest-avatar').src = stickerForLevel(state.avatarLevel).image;
+function cleanDisplayName(value) {
+ return typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f-\u009f]/g, '').trim().slice(0, 32).trim() : '';
 }
 
-function equipGuestSticker(level) {
- if (KEY !== GUEST_PROGRESS_KEY || !Number.isInteger(level) || level < 1 || level > state.stickerLevel) return;
+function updateProfile() {
+ const label = KEY === GUEST_PROGRESS_KEY ? 'Guest profile' : 'Edit account profile';
+ const button = $('guest-profile-open');
+ button.setAttribute('aria-label', label);
+ button.title = label;
+ $('guest-avatar').src = stickerForLevel(state.avatarLevel).image;
+}
+
+function openProfile() {
+ const guest = KEY === GUEST_PROGRESS_KEY;
+ $('guest-profile-title').textContent = guest ? 'Guest profile' : 'Account profile';
+ $('profile-storage-note').textContent = guest
+  ? 'Your guest profile is saved on this device.'
+  : 'Your display name and picture sync with your study account.';
+ $('profile-name').value = state.displayName;
+ renderProfileStickers();
+ $('guest-profile-status').textContent = `Current picture: ${stickerForLevel(state.avatarLevel).name}`;
+ $('guest-profile').showModal();
+}
+
+function equipProfileSticker(level) {
+ if (!Number.isInteger(level) || level < 1 || level > state.stickerLevel) return;
  state.avatarLevel = level;
  save();
- updateGuestProfile();
+ updateProfile();
  $('guest-profile-status').textContent = `${stickerForLevel(level).name} is your profile picture.`;
 }
 
-function renderGuestStickers() {
+function renderProfileStickers() {
  const list = $('guest-stickers');
  list.replaceChildren();
  for (let level = 1; level <= state.stickerLevel; level++) {
@@ -73,7 +91,7 @@ function renderGuestStickers() {
   label.textContent = level === 1 ? 'Starter' : `Level ${level} · ${sticker.name}`;
   button.append(image, label);
   button.addEventListener('click', () => {
-   equipGuestSticker(level);
+   equipProfileSticker(level);
    for (const choice of list.children) choice.setAttribute('aria-pressed', String(choice === button));
   });
   list.append(button);
