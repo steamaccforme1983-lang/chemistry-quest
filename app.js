@@ -388,8 +388,8 @@ $('retake-random').addEventListener('click',()=>startRetake('random'));
 $('dismiss-answer-popup').addEventListener('click',dismissAnswerPopup);
 $('guest-profile-open').addEventListener('click', openProfile);
 $('edit-account-profile').addEventListener('click', openProfile);
+for (const id of ['profile-close', 'profile-done']) $(id).addEventListener('click', () => $('guest-profile').close());
 $('profile-form').addEventListener('submit', event => {
- if (event.submitter?.value === 'close') return;
  event.preventDefault();
  state.displayName = cleanDisplayName($('profile-name').value);
  $('profile-name').value = state.displayName;

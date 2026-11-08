@@ -31,6 +31,7 @@
     else if(registration.active)status.textContent='Guest practice is ready offline after reopening the app. Account answers and XP still need internet.';
    }
    describe();
+   registration.update?.().catch(() => {});
    registration.addEventListener('updatefound',()=>{const worker=registration.installing;worker?.addEventListener('statechange',()=>{if(worker.state==='installed'||worker.state==='activated')describe();});});
   }).catch(()=>{status.textContent='Offline setup is unavailable right now. You can still study online and try again later.';});
  }else status.textContent='Offline setup needs a supported browser and an HTTPS connection. Use the online website link.';
