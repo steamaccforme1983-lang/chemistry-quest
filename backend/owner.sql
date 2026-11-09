@@ -68,7 +68,16 @@ begin
   return cq_private.owner_api(p_args->>'token',p_args->'progress'->'_owner');
  end if;
  if p_action='progress' and p_args->'progress' ? '_battle' then
-  return cq_private.battle_api(p_args->>'token',p_args->'progress'->'_battle');
+  result:=cq_private.battle_api(p_args->>'token',p_args->'progress'->'_battle');
+  if not (result ? 'battles') then return result;end if;
+  return jsonb_set(result,'{battles}',coalesce((
+   select jsonb_agg(entry.value || jsonb_build_object('opponentIsOwner',exists(
+    select 1 from cq_private.app_owner o join cq_private.battles b
+     on b.id=(entry.value->>'id')::uuid
+    where o.account_id=case when (entry.value->>'incoming')::boolean then b.sender else b.recipient end
+   )) order by entry.position)
+   from jsonb_array_elements(result->'battles') with ordinality as entry(value,position)
+  ),'[]'::jsonb));
  end if;
  result:=public.cq_account_api_scoring(p_action,p_args);
  if result->'user'->>'id' is not null then

@@ -19,6 +19,14 @@ function setupBattles(request) {
   return element;
  }
 
+ function addOwnerBadge(element, battle) {
+  if (battle.opponentIsOwner !== true) return;
+  const badge = document.createElement('span');
+  badge.className = 'owner-badge';
+  badge.textContent = 'Owner / Admin';
+  element.append(badge);
+ }
+
  function showRound(battle) {
   const questions = battle.deck?.map(id => ALL_QUESTIONS.find(question => question.id === id));
   if (questions?.length !== 5 || questions.some(question => !question)) {
@@ -33,6 +41,7 @@ function setupBattles(request) {
   drafts.set(selected, answers);
   const title = document.createElement('h3');
   title.textContent = `Battle with ${battle.opponent}`;
+  addOwnerBadge(title, battle);
   play.append(title);
   const submit = button('Submit answers', () => send('submit', {id:battle.id, answers:answers.join('')}, 'Answers submitted.'));
   submit.disabled = answers.includes(null);
@@ -88,6 +97,7 @@ function setupBattles(request) {
    } else {
     summary.textContent = battle.status === 'expired' ? 'Expired' : 'Declined';
    }
+   addOwnerBadge(name, battle);
    item.append(name, summary);
    if (battle.status === 'pending' && battle.incoming) {
     item.append(button('Accept', () => send('accept',{id:battle.id})), button('Decline', () => send('decline',{id:battle.id})));
