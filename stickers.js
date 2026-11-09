@@ -55,12 +55,15 @@ function updateProfile() {
  $('guest-avatar').src = stickerForLevel(state.avatarLevel).image;
 }
 
+let ownerAvatarAccess = false;
+const avatarLimit = () => ownerAvatarAccess ? MAX_STICKER_LEVEL : state.stickerLevel;
+
 function openProfile() {
  const guest = KEY === GUEST_PROGRESS_KEY;
  $('guest-profile-title').textContent = guest ? 'Guest profile' : 'Account profile';
  $('profile-storage-note').textContent = guest
   ? 'Your guest profile is saved on this device.'
-  : 'Your display name and picture sync with your study account.';
+  : ownerAvatarAccess ? 'The full sticker collection is unlocked for your account.' : 'Your display name and picture sync with your study account.';
  $('profile-name').value = state.displayName;
  renderProfileStickers();
  $('guest-profile-status').textContent = `Current picture: ${stickerForLevel(state.avatarLevel).name}`;
@@ -68,7 +71,7 @@ function openProfile() {
 }
 
 function equipProfileSticker(level) {
- if (!Number.isInteger(level) || level < 1 || level > state.stickerLevel) return;
+ if (!Number.isInteger(level) || level < 1 || level > avatarLimit()) return;
  state.avatarLevel = level;
  save();
  updateProfile();
@@ -78,7 +81,7 @@ function equipProfileSticker(level) {
 function renderProfileStickers() {
  const list = $('guest-stickers');
  list.replaceChildren();
- for (let level = 1; level <= state.stickerLevel; level++) {
+ for (let level = 1; level <= avatarLimit(); level++) {
   const sticker = stickerForLevel(level);
   const button = document.createElement('button');
   button.type = 'button';

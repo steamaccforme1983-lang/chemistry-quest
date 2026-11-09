@@ -12,6 +12,7 @@
  const status=text=>{$('sync-status').textContent=text;};
  const deviceSafety=()=>storageOK?'Your progress is kept on this device.':'Your progress is kept in this tab only. Keep it open until syncing succeeds.';
  function accountUI(){
+  $('owner-open').hidden = !session || !ownerAvatarAccess;
   $('account-open').textContent=session?'My account':'Sign in · Save online';
   $('account-tabs').hidden=!!session;$('account-form').hidden=!!session;$('account-manage').hidden=!session;
   $('account-title').textContent=session?'Your study account.':mode==='signup'?'Create your account.':mode==='recover'?'Reset your password.':'Welcome back.';
@@ -101,6 +102,7 @@
   }finally{inFlight=false;scoreBusy=false;app.inert=false;$('account-dialog').inert=false;$('guest-profile').inert=false;}
  }
  async function receiveAccount(data){
+  ownerAvatarAccess = data.appOwner === true;
   if(KEY===GUEST)guestMemory=JSON.parse(JSON.stringify(state));
   epoch++;clearTimeout(saveTimer);session={token:data.token,user:data.user};store(SESSION,session);
   KEY=`chemistry-quest-account-${session.user.id}`;
@@ -132,6 +134,40 @@
   else if(blockedIdentity===identity()&&blockedUntil){blockedUntil=0;$('account-message').textContent='You can try again now. You have 3 attempts.';}
  }
  globalThis.setupBattles?.(request);
+ $('owner-open').addEventListener('click', async () => {
+  if (!session || !ownerAvatarAccess) return;
+  const result = $('owner-result');
+  result.textContent = 'Loading…';
+  $('owner-dialog').showModal();
+  const owner = KEY;
+  try {
+   const data = await request('progress', {progress:{_owner:{action:'dashboard'}}});
+   if (owner !== KEY) return;
+   const lines = [
+    ['Registered players', data.players], ['Total battles', data.battles],
+    ['Open battles', data.open], ['Completed battles', data.completed],
+    ['Account reports', data.reports.account || 0], ['Practice reports', data.reports.practice || 0],
+    ['Battle reports', data.reports.battle || 0], ['Other reports', data.reports.other || 0]
+   ];
+   result.textContent = lines.map(([label,value]) => `${label}: ${value}`).join('\n');
+  } catch (error) {
+   if (owner === KEY) result.textContent = error.message;
+  }
+ });
+ $('report-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!session || $('report-send').disabled) return;
+  $('report-send').disabled = true;
+  try {
+   const data = await request('progress', {progress:{_owner:{action:'report',category:$('report-category').value}}});
+   if (!data.reported) throw new Error('Reporting is temporarily unavailable.');
+   $('report-status').textContent = 'Issue category reported.';
+  } catch (error) {
+   $('report-status').textContent = error.message;
+  } finally {
+   $('report-send').disabled = false;
+  }
+ });
  $('account-form').addEventListener('submit',async event=>{
   event.preventDefault();if(busy||Date.now()<blockedUntil&&blockedIdentity===identity())return;
   busy=true;updateCountdown();$('account-message').textContent='Please wait…';
@@ -180,6 +216,7 @@
   if(inFlight){status('Wait for the current sync to finish, then sign out.');return;}
   const token=session?.token;epoch++;clearTimeout(saveTimer);session=null;
   try{localStorage.removeItem(SESSION)}catch{}
+  ownerAvatarAccess=false;
   KEY=GUEST;pendingScore=null;conflict=false;meta={revision:0,dirty:false};replaceProgress(read(GUEST)||guestMemory||fresh());accountUI();changeMode('login');
   if(token)try{await request('logout',{},token)}catch{$('account-message').textContent='Signed out on this browser. The server session expires within 7 days.';}
  });

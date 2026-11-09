@@ -29,7 +29,7 @@ function load(snapshot) {
    ? raw.xp : Object.values(state.results).filter(r => r.earned).length * 20;
   const savedLevel = Number.isSafeInteger(raw.stickerLevel) ? raw.stickerLevel : 1;
   state.stickerLevel = Math.min(MAX_STICKER_LEVEL, Math.max(savedLevel, Math.floor(state.xp / 100) + 1));
-  if (Number.isInteger(raw.avatarLevel) && raw.avatarLevel >= 1 && raw.avatarLevel <= state.stickerLevel) state.avatarLevel = raw.avatarLevel;
+  if (Number.isInteger(raw.avatarLevel) && raw.avatarLevel >= 1 && raw.avatarLevel <= (ownerAvatarAccess ? MAX_STICKER_LEVEL : state.stickerLevel)) state.avatarLevel = raw.avatarLevel;
   state.displayName = cleanDisplayName(raw.displayName);
   state.streak = Number.isSafeInteger(raw.streak) && raw.streak >= 0 ? raw.streak : 0;
   state.best = Math.max(state.streak,Number.isSafeInteger(raw.best) && raw.best >= 0 ? raw.best : 0);
