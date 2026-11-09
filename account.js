@@ -131,6 +131,7 @@
   if(locked)$('account-message').textContent=`Too many failed attempts. Try again in ${Math.floor(seconds/60)}m ${seconds%60}s. The wait also applies on other devices.`;
   else if(blockedIdentity===identity()&&blockedUntil){blockedUntil=0;$('account-message').textContent='You can try again now. You have 3 attempts.';}
  }
+ globalThis.setupBattles?.(request);
  $('account-form').addEventListener('submit',async event=>{
   event.preventDefault();if(busy||Date.now()<blockedUntil&&blockedIdentity===identity())return;
   busy=true;updateCountdown();$('account-message').textContent='Please wait…';

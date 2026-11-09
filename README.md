@@ -94,3 +94,9 @@ This is an installable Progressive Web App (PWA), using the existing free GitHub
 Run `node check-pwa.cjs` for manifest/icon dimensions, offline cache behavior, API exclusions, update-cache isolation and install UI event checks. Actual OS installation remains a user step; device/browser policy may affect availability.
 
 Open Install app in the footer for Android and Windows installation help.
+
+## Friend battles
+
+Sign in and open **My account → Friend battles** to copy your player ID or challenge a friend. Each player answers the same five questions independently. Both scores appear after both submissions. Battles expire after seven days.
+
+For a fresh backend, apply `backend/schema.sql`, then `backend/scoring.sql`, then `backend/battles.sql`. The battle migration routes battle commands through the existing account endpoint. Run `backend/verify-battles.sql` for rolled-back database checks and `node check-battles.cjs` for the client flow.

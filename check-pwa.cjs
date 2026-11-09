@@ -6,7 +6,7 @@ for(const icon of manifest.icons){const b=fs.readFileSync(icon.src);const size=N
 assert.ok(manifest.icons.some(i=>i.purpose==='maskable'));
 const handlers={},entries=new Map();const deleted=[];
 const cache={addAll:async requests=>{for(const request of requests){assert.equal(request.cache,'reload');const url=request.url;const relative=new URL(url).pathname.replace('/chemistry-quest/','')||'index.html';assert.ok(fs.existsSync(path.join('.',relative)),relative);entries.set(url,{url});}},match:async request=>entries.get(typeof request==='string'?request:request.url)};
-const cacheName='chemistry-quest:/chemistry-quest/:2026-11-08-profile-2';
+const cacheName='chemistry-quest:/chemistry-quest/:2026-11-09-battles-1';
 const worker=vm.createContext({URL,Request,self:{registration:{scope:'https://example.test/chemistry-quest/'},location:{origin:'https://example.test'},addEventListener:(name,fn)=>handlers[name]=fn},caches:{open:async()=>cache,keys:async()=>[cacheName,'chemistry-quest:/chemistry-quest/:old','other-app-cache'],delete:async name=>deleted.push(name)},fetch:async()=>{throw Error('network unavailable')}});
 vm.runInContext(fs.readFileSync('sw.js','utf8'),worker);
 async function lifetime(name){let work;handlers[name]({waitUntil:p=>work=p});await work;}
