@@ -1,8 +1,8 @@
 'use strict';
 // Bump this version whenever a shipped shell file changes. Keep each release coherent.
 const PREFIX=`chemistry-quest:${new URL(self.registration.scope).pathname}:`;
-const CACHE=PREFIX+'2026-11-17-subjects-1';
-const SHELL=['./','index.html','styles.css','subjects.js','subject-challenges.js','questions.js','variants.js','stickers.js','app.js','challenge.js','battles.js','account.js','install.js','manifest.webmanifest','icons/icon.svg','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png'];
+const CACHE=PREFIX+'2026-11-17-live-usage-1';
+const SHELL=['./','index.html','styles.css','subjects.js','subject-challenges.js','questions.js','variants.js','stickers.js','app.js','challenge.js','battles.js','usage.js','account.js','install.js','manifest.webmanifest','icons/icon.svg','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png'];
 const urls=SHELL.map(path=>new URL(path,self.registration.scope).href);
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(urls.map(url => new Request(url, {cache:'reload'})))));

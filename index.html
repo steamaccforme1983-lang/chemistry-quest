@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="styles.css">
-  <script defer src="subjects.js"></script><script defer src="subject-challenges.js"></script><script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="stickers.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="battles.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
+  <script defer src="subjects.js"></script><script defer src="subject-challenges.js"></script><script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="stickers.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="battles.js"></script><script defer src="usage.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
 </head>
 <body>
 <div class="app">
@@ -107,5 +107,5 @@
 <button id="battle-refresh" class="secondary" type="button">Refresh battles</button>
 <div id="battle-list"></div><div id="battle-play" hidden></div>
 </dialog>
-<dialog id="owner-dialog" aria-labelledby="owner-title"><form method="dialog"><h2 id="owner-title">Admin dashboard</h2><p>Player and battle totals, with reports grouped by category.</p><p id="owner-result" role="status" style="white-space:pre-line"></p><button class="primary">Done</button></form></dialog>
+<dialog id="owner-dialog" aria-labelledby="owner-title"><form method="dialog"><h2 id="owner-title">Admin dashboard</h2><h3>Live usage</h3><p id="owner-usage" role="status"></p><p>Counts devices and accounts active in the last two minutes. Refreshes every 30 seconds while open.</p><p id="owner-result" role="status" style="white-space:pre-line"></p><button class="primary">Done</button></form></dialog>
 </body></html>

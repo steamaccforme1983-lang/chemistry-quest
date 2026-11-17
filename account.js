@@ -1,7 +1,7 @@
 'use strict';
 (() => {
  if (!isChemistry) return;
- const ENDPOINT='https://bmgrefwvjqaqbljieqme.supabase.co/functions/v1/chemistry-accounts';
+ const ENDPOINT=typeof ACCOUNT_ENDPOINT === 'string' ? ACCOUNT_ENDPOINT : 'https://bmgrefwvjqaqbljieqme.supabase.co/functions/v1/chemistry-accounts';
  const GUEST='chemistry-quest-v1',SESSION='chemistry-quest-session';
  let session=null,meta={revision:0,dirty:false},mode='login',applying=false,inFlight=false;
  let guestMemory=JSON.parse(JSON.stringify(state));
@@ -135,15 +135,22 @@
   else if(blockedIdentity===identity()&&blockedUntil){blockedUntil=0;$('account-message').textContent='You can try again now. You have 3 attempts.';}
  }
  globalThis.setupBattles?.(request);
- $('owner-open').addEventListener('click', async () => {
-  if (!session || !ownerAvatarAccess) return;
+ const ownerDialog = $('owner-dialog');
+ const ownerUsage = $('owner-usage');
+ let usageTimer;
+ let dashboardPending = false;
+ async function refreshDashboard() {
+  if (!ownerDialog.open || !session || !ownerAvatarAccess || dashboardPending) return;
+  dashboardPending = true;
   const result = $('owner-result');
-  result.textContent = 'Loading…';
-  $('owner-dialog').showModal();
   const owner = KEY;
   try {
    const data = await request('progress', {progress:{_owner:{action:'dashboard'}}});
-   if (owner !== KEY) return;
+   if (owner !== KEY || !ownerDialog.open) return;
+   const usage = data.usage;
+   ownerUsage.textContent = usage
+    ? `${usage.active} active · ${usage.signedIn} signed-in players · ${usage.guests} guest browsers`
+    : 'Live counts are unavailable until the database update is applied.';
    const lines = [
     ['Registered players', data.players], ['Total battles', data.battles],
     ['Open battles', data.open], ['Completed battles', data.completed],
@@ -152,9 +159,23 @@
    ];
    result.textContent = lines.map(([label,value]) => `${label}: ${value}`).join('\n');
   } catch (error) {
-   if (owner === KEY) result.textContent = error.message;
+   if (owner === KEY && ownerDialog.open) {
+    ownerUsage.textContent = 'Could not refresh live counts. Retrying in 30 seconds.';
+    result.textContent = error.message;
+   }
+  } finally {
+   dashboardPending = false;
   }
+ }
+ $('owner-open').addEventListener('click', () => {
+  if (!session || !ownerAvatarAccess || ownerDialog.open) return;
+  ownerUsage.textContent = 'Checking live usage…';
+  $('owner-result').textContent = '';
+  ownerDialog.showModal();
+  refreshDashboard();
+  usageTimer = setInterval(refreshDashboard,30000);
  });
+ ownerDialog.addEventListener('close', () => clearInterval(usageTimer));
  $('report-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (!session || $('report-send').disabled) return;
