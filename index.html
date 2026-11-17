@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#147563">
-  <meta name="description" content="A little chemistry, every day. Practise 16 TG EAPCET chemistry topic groups, earn XP, and build your confidence.">
+  <meta name="description" content="Practice Chemistry, Maths and Physics for TG EAPCET.">
   <title>Chemistry Quest · TG EAPCET</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="styles.css">
-  <script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="stickers.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="battles.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
+  <script defer src="subjects.js"></script><script defer src="subject-challenges.js"></script><script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="stickers.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="battles.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
 </head>
 <body>
 <div class="app">
@@ -20,16 +20,22 @@
   <a class="brand" href="./" aria-label="Chemistry Quest home"><span class="brand-mark">C<span>✦</span></span><span>chemistry<span class="brand-second">quest.</span></span></a>
   <div class="exam-label"><span class="dot"></span> TG EAPCET / EAMCET</div>
   <div class="sidebar-heading">YOUR STUDY SPACE</div>
-  <button class="nav-button active" id="mix"><span>▦ &nbsp; Mixed practice</span><span class="count">64</span></button>
+  <button class="nav-button active" id="mix"><span>▦ &nbsp; Mixed practice</span><span class="count" id="mix-count">64</span></button>
   <button class="nav-button" id="review"><span>↺ &nbsp; Review mistakes</span><span class="count" id="missed-count">0</span></button>
-  <div class="topic-heading"><span>EXPLORE TOPICS</span><span>16</span></div>
-  <nav id="topics" aria-label="Choose a chemistry topic"></nav>
+  <div class="topic-heading"><span>EXPLORE TOPICS</span><span id="topic-total">16</span></div>
+  <nav id="topics" aria-label="Choose a practice topic"></nav>
   <div class="sidebar-note"><span>✧</span><p>Small steps.<br>Strong bonds.</p></div>
  </aside>
  <div class="main-wrap">
-  <header class="topbar"><span class="breadcrumb">Your daily dose of chemistry</span><div class="account-header"><span class="save-state" id="save-state"><span class="dot"></span> Progress saved on this device</span><button id="guest-profile-open" class="guest-profile-button" aria-label="Guest profile" title="Guest profile"><img id="guest-avatar" src="icons/icon.svg" alt=""></button><button class="secondary" id="account-open">Sign in · Save online</button></div></header>
+  <header class="topbar"><span class="breadcrumb" id="study-label">Your daily dose of chemistry</span><div class="account-header"><span class="save-state" id="save-state"><span class="dot"></span> Progress saved on this device</span><button id="guest-profile-open" class="guest-profile-button" aria-label="Guest profile" title="Guest profile"><img id="guest-avatar" src="icons/icon.svg" alt=""></button><button class="secondary" id="account-open">Sign in · Save online</button></div></header>
   <main>
-   <section class="intro"><div><div class="eyebrow">LEARN A LITTLE. LEVEL UP.</div><h1>Let’s build some <em>chemistry.</em></h1><p>One question at a time. You’ve got this.</p></div><div class="atom" aria-hidden="true"><span></span><span></span><span></span><b></b></div></section>
+   <nav class="subject-nav" aria-label="Study subject">
+    <a id="subject-chemistry" href="./">Chemistry</a>
+    <a id="subject-maths" href="./?subject=maths">Maths</a>
+    <a id="subject-physics" href="./?subject=physics">Physics</a>
+   </nav>
+   <p id="local-subject-note" hidden>Progress for this subject saves on this device.</p>
+   <section class="intro"><div><div class="eyebrow">LEARN A LITTLE. LEVEL UP.</div><h1>Let’s build some <em id="subject-heading">chemistry.</em></h1><p>One question at a time. You’ve got this.</p></div><div class="atom" aria-hidden="true"><span></span><span></span><span></span><b></b></div></section>
    <section class="stats" aria-label="Your progress">
     <div class="level-stat"><div class="stat-icon">✦</div><div class="level-copy"><div class="stat-caption">YOUR LEVEL</div><div class="level-line"><strong id="level">1</strong><span id="rank">Curious mind</span></div><div class="level-progress"><div class="track" id="xp-progress" role="progressbar" aria-label="XP toward next level" aria-valuemin="0" aria-valuemax="100"><span id="xp-bar"></span></div><small id="xp-label">0 / 100 XP</small></div></div></div>
     <div class="number-stat"><div class="stat-caption"><span class="accent">ϟ</span> CURRENT XP</div><strong id="total-xp">0</strong><span>earned through practice</span></div>
@@ -48,7 +54,7 @@
    </section>
    <div class="below-card"><span><span class="keycap">1</span> – <span class="keycap">4</span> to answer <span class="keycap enter">Enter</span> to continue</span><span>No timer. Just progress.</span></div>
    <section class="challenge-card" aria-labelledby="challenge-title"><div class="challenge-top"><div><span class="eyebrow">THE NEXT LEVEL</span><h2 id="challenge-title">JEE Chemistry Challenge</h2><p>10 hard JEE-style MCQs · 30 minutes · 50–90 XP per new correct answer.</p></div><strong id="challenge-timer" class="challenge-timer" role="timer" aria-label="Time remaining">30:00</strong></div><p class="challenge-rules">Original practice questions, not official past-paper questions. Fixed rewards; practice streak bonuses and penalties stay in practice mode. The timer keeps running if you leave or reload.</p><div id="challenge-content"></div><button id="challenge-start" class="primary">Start challenge →</button></section>
-   <section class="coverage"><div><span class="tiny-orbit">◎</span><div><h3>Your syllabus, in small bites.</h3><p>16 topic groups · 128 explained questions · 3 branches of chemistry</p></div></div><button id="about-button" class="text-button">How it works ↗</button></section>
+   <section class="coverage"><div><span class="tiny-orbit">◎</span><div><h3>Your syllabus, in small bites.</h3><p id="subject-coverage">16 topic groups · 128 explained questions</p></div></div><button id="about-button" class="text-button">How it works ↗</button></section>
    <p id="app-connection" class="app-connection" role="status" hidden>You’re offline. Guest practice is available after offline setup. Sign in and account XP need internet.</p>
    <footer><span>Made for your next “oh, I get it.”</span><div class="footer-actions"><button id="install-open" class="text-button">Install app</button><button id="reset-button" class="text-button">Reset progress</button></div></footer>
   </main>
@@ -72,7 +78,7 @@
  <button id="dismiss-level-up" class="primary">Keep going →</button>
 </section>
 <dialog id="confirm-answer" aria-labelledby="confirmation-title" aria-describedby="confirmation-stakes"><form method="dialog"><span class="eyebrow">ONE LAST LOOK</span><h2 id="confirmation-title">Are you sure this is the right answer?</h2><p id="confirmation-choice" class="confirmation-choice"></p><p id="confirmation-stakes"></p><div class="dialog-actions"><button class="secondary" value="cancel" autofocus>Let me rethink</button><button class="primary" value="confirm">Yes, check my answer →</button></div></form></dialog>
-<dialog id="about"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><span class="eyebrow">A LITTLE BETTER, EVERY DAY</span><h2>Make learning a habit.</h2><p>Choose a topic or mix all 16. Select an answer, then confirm when you’re sure. Only confirmed answers affect XP and streaks.</p><p><b>Earn 20 XP</b> the first time you answer each question correctly. Every 6th consecutive correct answer earns <b>24 XP (20% extra)</b> if that question hasn’t already awarded XP. Repeated correct answers award no extra XP. Every 100 current XP brings a level.</p><p><b>Every 5 consecutive wrong answers halve your current XP</b>, rounded down to a whole number. Another 5 wrong in the same streak halve it again. A correct answer resets the wrong streak; a wrong answer resets the correct streak. Levels can decrease when XP is lost. Cancelling a confirmation or skipping a question changes neither streak.</p><p>Review mistakes revisits questions whose latest answer was incorrect. Guest progress is stored in this browser. Signed-in XP is calculated online from your submitted answers; account rewards require an internet connection. These are original practice questions, not official past-paper questions or a complete syllabus.</p><button class="primary">Let’s practise →</button></form></dialog>
+<dialog id="about"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><span class="eyebrow">A LITTLE BETTER, EVERY DAY</span><h2>Make learning a habit.</h2><p>Choose one subject and practise a single topic or mix its topics. Select an answer, then confirm when you’re sure. Only confirmed answers affect XP and streaks.</p><p><b>Earn 20 XP</b> the first time you answer each question correctly. Every 6th consecutive correct answer earns <b>24 XP (20% extra)</b> if that question hasn’t already awarded XP. Repeated correct answers award no extra XP. Every 100 current XP brings a level.</p><p><b>Every 5 consecutive wrong answers halve your current XP</b>, rounded down to a whole number. Another 5 wrong in the same streak halve it again. A correct answer resets the wrong streak; a wrong answer resets the correct streak. Levels can decrease when XP is lost. Cancelling a confirmation or skipping a question changes neither streak.</p><p>Review mistakes revisits questions whose latest answer was incorrect. Guest progress is stored in this browser. Signed-in XP is calculated online from your submitted answers; account rewards require an internet connection. These are original practice questions, not official past-paper questions or a complete syllabus.</p><button class="primary">Let’s practise →</button></form></dialog>
 <dialog id="reset-dialog"><form method="dialog"><h2>A fresh start?</h2><p id="reset-description">This clears all XP, answers, and streaks saved in this browser. You can’t undo it.</p><div class="dialog-actions"><button class="secondary" value="cancel">Keep my progress</button><button class="primary" value="reset">Reset everything</button></div></form></dialog>
 <dialog id="challenge-finish-dialog" aria-labelledby="challenge-finish-title"><form method="dialog"><h2 id="challenge-finish-title">Finish this challenge?</h2><p id="challenge-finish-description"></p><div class="dialog-actions"><button class="secondary" value="cancel" autofocus>Keep solving</button><button class="primary" value="finish">Finish attempt</button></div></form></dialog>
 <dialog id="challenge-confirm" aria-labelledby="challenge-confirm-title"><form method="dialog"><h2 id="challenge-confirm-title">Are you sure this is the right answer?</h2><p id="challenge-choice" class="confirmation-choice"></p><p>The clock keeps running while you decide.</p><div class="dialog-actions"><button class="secondary" value="cancel" autofocus>Let me rethink</button><button class="primary" value="confirm">Yes, check my answer →</button></div></form></dialog>
@@ -103,4 +109,3 @@
 </dialog>
 <dialog id="owner-dialog" aria-labelledby="owner-title"><form method="dialog"><h2 id="owner-title">Admin dashboard</h2><p>Player and battle totals, with reports grouped by category.</p><p id="owner-result" role="status" style="white-space:pre-line"></p><button class="primary">Done</button></form></dialog>
 </body></html>
-

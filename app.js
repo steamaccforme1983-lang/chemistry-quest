@@ -220,7 +220,8 @@ function stats() {
  $('review').classList.toggle('active',state.filter === 'review');
  $('mix').setAttribute('aria-pressed',state.filter === 'all');
  $('review').setAttribute('aria-pressed',state.filter === 'review');
- document.querySelectorAll('.topic').forEach((button,t) => {
+ document.querySelectorAll('.topic').forEach(button => {
+  const t = Number(button.dataset.topic);
   button.classList.toggle('active',state.filter === String(t));
   button.setAttribute('aria-pressed',state.filter === String(t));
   button.querySelector('small').textContent = `${QUESTIONS.filter(q=>q.topic===t && state.results[q.id]?.earned).length}/4`;
@@ -336,7 +337,7 @@ function commitAnswer(choice) {
  showAnswerPopup(q,correct,earnedNow);
  const level=Math.floor(state.xp/100)+1;
  if(level>oldLevel) showLevelUp(level);
- else if(earnedNow && ALL_QUESTIONS.every(item=>state.results[item.id]?.earned)) toast('All 128 topic questions mastered. Brilliant work!');
+ else if(earnedNow && ALL_QUESTIONS.every(item=>state.results[item.id]?.earned)) toast('All topic questions mastered. Brilliant work!');
  $('next').focus({preventScroll:true});
 }
 function setFilter(value) {
@@ -368,8 +369,8 @@ function next() {
  render(true);save();
 }
 // Navigation remains lightweight, with native select controls on small screens.
-for(const branch of ['Inorganic','Physical','Organic']) {
- const heading=document.createElement('div');heading.className='branch';heading.textContent=`${branch} chemistry`;$('topics').append(heading);
+for(const branch of new Set(TOPICS.map(([,group]) => group))) {
+ const heading=document.createElement('div');heading.className='branch';heading.textContent=`${branch}${isChemistry ? ' chemistry' : ''}`;$('topics').append(heading);
  TOPICS.forEach(([name,group],t)=>{
   if(group!==branch)return;
   const button=document.createElement('button');button.className='topic';
@@ -377,7 +378,22 @@ for(const branch of ['Inorganic','Physical','Organic']) {
   button.append(label,count);button.dataset.topic=t;button.addEventListener('click',()=>setFilter(String(t)));$('topics').append(button);
  });
 }
-// DOM order follows topic order, used by progress counters above.
+// Use the topic ID to read mastery even if groups are displayed together.
+$('mix-count').textContent = QUESTIONS.length;
+$('topic-total').textContent = TOPICS.length;
+$('subject-coverage').textContent = TOPICS.length+' topic groups · '+ALL_QUESTIONS.length+' explained questions';
+if (typeof SUBJECT !== 'undefined') {
+ $('subject-'+SUBJECT).setAttribute('aria-current','page');
+ if (!isChemistry) {
+  $('subject-heading').textContent = SUBJECT_LABEL;
+  $('study-label').textContent = SUBJECT_LABEL+' practice';
+  $('challenge-title').textContent = 'JEE-style '+SUBJECT_LABEL+' Challenge';
+  $('account-open').hidden = true;
+  $('local-subject-note').hidden = false;
+  document.title = SUBJECT_LABEL+' · Chemistry Quest';
+ }
+}
+
 TOPICS.forEach(([name],t)=>{const option=document.createElement('option');option.value=String(t);option.textContent=name;$('topic-select').append(option);});
 $('mix').addEventListener('click',()=>setFilter('all'));
 $('review').addEventListener('click',()=>setFilter('review'));
@@ -408,7 +424,7 @@ $('confirm-answer').addEventListener('close',()=>{
 });
 $('about-button').addEventListener('click',()=>$('about').showModal());
 $('reset-button').addEventListener('click',()=>{
- $('reset-description').textContent=KEY==='chemistry-quest-v1'
+ $('reset-description').textContent=KEY===GUEST_PROGRESS_KEY
   ? 'This clears your guest XP, answers, streaks, and profile on this device. You can’t undo it.'
   : 'This resets your account’s XP, answers, streaks, challenge progress, and profile. The reset will sync online and appear on your other devices. You can’t undo it.';
  $('reset-dialog').showModal();

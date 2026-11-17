@@ -1,6 +1,6 @@
 'use strict';
 
-const GUEST_PROGRESS_KEY = 'chemistry-quest-v1';
+const GUEST_PROGRESS_KEY = isChemistry ? 'chemistry-quest-v1' : 'chemistry-quest-'+SUBJECT+'-v1';
 const MAX_STICKER_LEVEL = 1 + Math.floor((ALL_QUESTIONS.length * 24 + 900) / 100);
 const STICKER_PALETTES = [
  ['Sakura', '#ffe2ed', '#6e354f', '#c85085', '#fff4bd'],

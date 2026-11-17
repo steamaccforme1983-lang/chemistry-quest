@@ -82,6 +82,7 @@ const ALT_RAW = [
  ['Reduction of butan-2-one with NaBH₄ followed by work-up gives:',['Butan-1-ol','Butan-2-ol','Butanal','Butanoic acid'],1,'A ketone reduces to a secondary alcohol. Butan-2-one therefore gives butan-2-ol.']
  ]
 ];
-const VARIANTS=ALT_RAW.flatMap((rows,t)=>rows.map((r,i)=>({id:`v-${t}-${i}`,topic:t,pattern:`${t}-${i}`,prompt:r[0],options:r[1],answer:r[2],explanation:r[3]})));
+const CHEMISTRY_VARIANTS=ALT_RAW.flatMap((rows,t)=>rows.map((r,i)=>({id:`v-${t}-${i}`,topic:t,pattern:`${t}-${i}`,prompt:r[0],options:r[1],answer:r[2],explanation:r[3]})));
+const VARIANTS = isChemistry ? CHEMISTRY_VARIANTS : subjectPractice(true);
 const ALL_QUESTIONS=[...QUESTIONS,...VARIANTS];
 if(typeof module!=='undefined')module.exports={ALT_RAW,VARIANTS};

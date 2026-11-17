@@ -1,6 +1,6 @@
 'use strict';
 // Original single-correct JEE-style questions, with fixed difficulty-based rewards.
-const CHALLENGE_QUESTIONS = [
+const CHEMISTRY_CHALLENGE_QUESTIONS = [
  {id:'jee-1',topic:6,xp:70,prompt:'PCl₅(g) ⇌ PCl₃(g) + Cl₂(g). Pure PCl₅ is initially taken and is 20% dissociated at equilibrium. If the total equilibrium pressure is 2 bar, the numerical value of Kp (using pressures in bar) is:',options:['1/6','1/12','1/24','1/3'],answer:1,explanation:'Starting with 1 mol, equilibrium amounts are 0.8, 0.2 and 0.2 mol; total = 1.2 mol. Partial pressures are 4/3, 1/3 and 1/3 bar. Kp = (1/3)²/(4/3) = 1/12. Equivalently Kp = α²P/(1 − α²).'},
  {id:'jee-2',topic:6,xp:80,prompt:'100 mL of 0.40 M acetic acid is mixed with 100 mL of 0.30 M NaOH. Given pKa = 4.76 and log₁₀3 = 0.477, the approximate final pH is (assume ideal behaviour):',options:['4.28','4.76','5.24','8.76'],answer:2,explanation:'Initially acid = 0.040 mol and OH⁻ = 0.030 mol. Neutralisation leaves 0.010 mol acid and makes 0.030 mol acetate. Henderson–Hasselbalch gives pH = 4.76 + log(3) = 5.237 ≈ 5.24.'},
  {id:'jee-3',topic:7,xp:70,prompt:'At 298 K, a reaction has ΔG° = −11.416 kJ mol⁻¹. Given 2.303RT = 5.708 kJ mol⁻¹ at this temperature, its equilibrium constant K is approximately:',options:['0.01','10','100','1000'],answer:2,explanation:'ΔG° = −2.303RT log₁₀K. Thus log₁₀K = 11.416/5.708 = 2, so K = 100. The negative standard Gibbs energy favours products.'},
@@ -12,6 +12,7 @@ const CHALLENGE_QUESTIONS = [
  {id:'jee-9',topic:11,xp:50,prompt:'Considering both optically active and meso forms, how many distinct configurational stereoisomers does 2,3-dichlorobutane have, and how many are optically active?',options:['4 total; 4 active','3 total; 2 active','3 total; 1 active','2 total; 2 active'],answer:1,explanation:'The two stereocentres might suggest 2² = 4 arrangements, but (2R,3S) and (2S,3R) are the same meso form because of internal symmetry. The distinct forms are RR, SS and meso: 3 total, with RR and SS optically active.'},
  {id:'jee-10',topic:8,xp:90,prompt:'For a hydrogen-like He⁺ ion, an electron falls from n = 4 to n = 2. Taking the ground-state energy of hydrogen as −13.6 eV, the emitted photon energy and wavelength (hc = 1240 eV·nm) are approximately:',options:['2.55 eV; 486 nm','10.2 eV; 122 nm','40.8 eV; 30.4 nm','13.6 eV; 91.2 nm'],answer:1,explanation:'For a hydrogen-like ion, Eₙ = −13.6Z²/n² eV. He⁺ has Z = 2. Photon energy = 54.4(1/2² − 1/4²) = 54.4(3/16) = 10.2 eV. λ = hc/E = 1240/10.2 ≈ 121.6 nm.'}
 ];
+const CHALLENGE_QUESTIONS = isChemistry ? CHEMISTRY_CHALLENGE_QUESTIONS : subjectChallenge();
 let challengePending=null;
 function validateChallenge() {
  const c=state.challenge;

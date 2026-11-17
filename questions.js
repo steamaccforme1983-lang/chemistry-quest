@@ -1,5 +1,5 @@
 // Original practice questions; not official previous-year exam questions.
-const TOPICS = [
+const CHEMISTRY_TOPICS = [
  ['Periodicity','Inorganic'],['Chemical Bonding','Inorganic'],['d/f Block','Inorganic'],['Coordination','Inorganic'],['s Block','Inorganic'],['p Block','Inorganic'],
  ['Equilibrium','Physical'],['Thermodynamics','Physical'],['Atomic Structure / Quantum Numbers','Physical'],['Mole Concept','Physical'],['Chemical Kinetics','Physical'],
  ['GOC / IUPAC / Isomerism','Organic'],['Hydrocarbons','Organic'],['Haloalkanes','Organic'],['Alcohols','Organic'],['Aldehydes / Ketones','Organic']
@@ -88,5 +88,8 @@ const RAW = [
  ['Reduction of ethanal with NaBH₄ followed by work-up gives:',['Ethanoic acid','Ethanol','Ethene','Ethane'],1,'NaBH₄ reduces the aldehyde carbonyl group to a primary alcohol, giving ethanol.']
  ]
 ];
-const QUESTIONS = RAW.flatMap((rows,t) => rows.map((r,i) => ({id:`${t}-${i}`,topic:t,prompt:r[0],options:r[1],answer:r[2],explanation:r[3]})));
+const CHEMISTRY_QUESTIONS = RAW.flatMap((rows,t) => rows.map((r,i) => ({id:`${t}-${i}`,topic:t,prompt:r[0],options:r[1],answer:r[2],explanation:r[3]})));
+const isChemistry = typeof SUBJECT === 'undefined' || SUBJECT === 'chemistry';
+const TOPICS = isChemistry ? CHEMISTRY_TOPICS : SUBJECT_PATTERNS.map(([name, group])=>[name,group]);
+const QUESTIONS = isChemistry ? CHEMISTRY_QUESTIONS : subjectPractice(false);
 if(typeof module !== 'undefined') module.exports = {TOPICS, QUESTIONS};
