@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#147563">
+  <meta name="theme-color" content="#133c34">
   <meta name="description" content="Practice Chemistry, Maths and Physics for TG EAPCET.">
   <title>Chemistry Quest · TG EAPCET</title>
   <link rel="manifest" href="manifest.webmanifest">
@@ -15,6 +15,7 @@
   <script defer src="subjects.js"></script><script defer src="subject-challenges.js"></script><script defer src="questions.js"></script><script defer src="variants.js"></script><script defer src="stickers.js"></script><script defer src="app.js"></script><script defer src="challenge.js"></script><script defer src="battles.js"></script><script defer src="account.js"></script><script defer src="install.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#practice-title">Skip to practice</a>
 <div class="app">
  <aside class="sidebar" aria-label="Study topics">
   <a class="brand" href="./" aria-label="Chemistry Quest home"><span class="brand-mark">C<span>✦</span></span><span>chemistry<span class="brand-second">quest.</span></span></a>
@@ -35,7 +36,7 @@
     <a id="subject-physics" href="./?subject=physics">Physics</a>
    </nav>
    <p id="local-subject-note" hidden>Progress for this subject saves on this device.</p>
-   <section class="intro"><div><div class="eyebrow">LEARN A LITTLE. LEVEL UP.</div><h1>Let’s build some <em id="subject-heading">chemistry.</em></h1><p>One question at a time. You’ve got this.</p></div><div class="atom" aria-hidden="true"><span></span><span></span><span></span><b></b></div></section>
+   <section class="intro"><div><div class="eyebrow">YOUR NEXT BREAKTHROUGH STARTS HERE</div><h1>Let’s build some<br><em id="subject-heading">chemistry.</em></h1><p>A little focus. A little curiosity. A level closer.</p></div><div class="atom" aria-hidden="true"><span></span><span></span><span></span><b></b></div></section>
    <section class="stats" aria-label="Your progress">
     <div class="level-stat"><div class="stat-icon">✦</div><div class="level-copy"><div class="stat-caption">YOUR LEVEL</div><div class="level-line"><strong id="level">1</strong><span id="rank">Curious mind</span></div><div class="level-progress"><div class="track" id="xp-progress" role="progressbar" aria-label="XP toward next level" aria-valuemin="0" aria-valuemax="100"><span id="xp-bar"></span></div><small id="xp-label">0 / 100 XP</small></div></div></div>
     <div class="number-stat"><div class="stat-caption"><span class="accent">ϟ</span> CURRENT XP</div><strong id="total-xp">0</strong><span>earned through practice</span></div>
@@ -44,8 +45,6 @@
    <p id="streak-rule" class="streak-rule"></p>
    <div class="practice-heading"><h2 id="practice-title">Mixed practice</h2><span id="mastery">0 of 64 mastered</span></div>
    <div class="mobile-filters"><label for="topic-select">Practice topic</label><select id="topic-select"><option value="all">All topics · Mixed practice</option><option value="review">Review mistakes</option></select></div>
-   <section class="attempt-summary" aria-label="Answer statistics"><div class="attempt-grid"><div><strong id="count-answered">0</strong><span>Answered</span></div><div><strong id="count-correct">0</strong><span>Correct</span></div><div><strong id="count-wrong">0</strong><span>Wrong</span></div><div><strong id="count-accuracy">—</strong><span>Accuracy</span></div></div><p id="visit-counts"></p><details><summary>See all topic counters</summary><div class="table-scroll"><table><thead><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Wrong</th></tr></thead><tbody id="topic-count-rows"></tbody></table></div></details></section>
-   <section class="retake-toolbar" id="retake-toolbar" aria-label="Retake this topic"><div><strong>Practise again</strong><p id="retake-status">Choose the same questions or fresh variations.</p></div><div class="retake-buttons"><button id="retake-same" class="secondary">↺ Same questions</button><button id="retake-random" class="secondary">⤨ Random variations</button></div></section>
    <section class="question-card" aria-labelledby="question-text">
     <div class="question-meta"><span class="topic-pill" id="topic-pill"></span><span id="question-position"></span></div>
     <div class="question-body" id="question-body"><div class="question-kicker">PICK THE CORRECT ANSWER</div><h2 id="question-text"></h2><div id="options" class="options" role="group" aria-label="Answer choices"></div></div>
@@ -53,6 +52,8 @@
     <div class="card-footer"><span id="reward-note"><span class="accent">✦</span> +20 XP for a new correct answer</span><button class="primary" id="next">Skip question <span>→</span></button></div>
    </section>
    <div class="below-card"><span><span class="keycap">1</span> – <span class="keycap">4</span> to answer <span class="keycap enter">Enter</span> to continue</span><span>No timer. Just progress.</span></div>
+   <section class="attempt-summary" aria-label="Answer statistics"><div class="attempt-grid"><div><strong id="count-answered">0</strong><span>Answered</span></div><div><strong id="count-correct">0</strong><span>Correct</span></div><div><strong id="count-wrong">0</strong><span>Wrong</span></div><div><strong id="count-accuracy">—</strong><span>Accuracy</span></div></div><p id="visit-counts"></p><details><summary>See all topic counters</summary><div class="table-scroll"><table><thead><tr><th>Topic</th><th>Answered</th><th>Correct</th><th>Wrong</th></tr></thead><tbody id="topic-count-rows"></tbody></table></div></details></section>
+   <section class="retake-toolbar" id="retake-toolbar" aria-label="Retake this topic"><div><strong>Practise again</strong><p id="retake-status">Choose the same questions or fresh variations.</p></div><div class="retake-buttons"><button id="retake-same" class="secondary">↺ Same questions</button><button id="retake-random" class="secondary">⤨ Random variations</button></div></section>
    <section class="challenge-card" aria-labelledby="challenge-title"><div class="challenge-top"><div><span class="eyebrow">THE NEXT LEVEL</span><h2 id="challenge-title">JEE Chemistry Challenge</h2><p>10 hard JEE-style MCQs · 30 minutes · 50–90 XP per new correct answer.</p></div><strong id="challenge-timer" class="challenge-timer" role="timer" aria-label="Time remaining">30:00</strong></div><p class="challenge-rules">Original practice questions, not official past-paper questions. Fixed rewards; practice streak bonuses and penalties stay in practice mode. The timer keeps running if you leave or reload.</p><div id="challenge-content"></div><button id="challenge-start" class="primary">Start challenge →</button></section>
    <section class="coverage"><div><span class="tiny-orbit">◎</span><div><h3>Your syllabus, in small bites.</h3><p id="subject-coverage">16 topic groups · 128 explained questions</p></div></div><button id="about-button" class="text-button">How it works ↗</button></section>
    <p id="app-connection" class="app-connection" role="status" hidden>You’re offline. Guest practice is available after offline setup. Sign in and account XP need internet.</p>

@@ -13,6 +13,7 @@
  const status=text=>{$('sync-status').textContent=text;};
  const deviceSafety=()=>storageOK?'Your progress is kept on this device.':'Your progress is kept in this tab only. Keep it open until syncing succeeds.';
  function accountUI(){
+  ['login','signup','recover'].forEach(tab => $('tab-'+tab).setAttribute('aria-pressed', String(mode===tab)));
   $('owner-open').hidden = !session || !ownerAvatarAccess;
   $('account-open').textContent=session?'My account':'Sign in · Save online';
   $('account-tabs').hidden=!!session;$('account-form').hidden=!!session;$('account-manage').hidden=!session;
