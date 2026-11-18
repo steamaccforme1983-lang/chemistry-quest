@@ -100,3 +100,13 @@ Open Install app in the footer for Android and Windows installation help.
 Sign in and open **My account → Friend battles** to copy your player ID or challenge a friend. Each player answers the same five questions independently. Both scores appear after both submissions. Battles expire after seven days.
 
 For a fresh backend, apply `backend/schema.sql`, then `backend/scoring.sql`, then `backend/battles.sql`. The battle migration routes battle commands through the existing account endpoint. Run `backend/verify-battles.sql` for rolled-back database checks and `node check-battles.cjs` for the client flow.
+
+## JEE Main 2027 Paper 1
+
+Choose JEE Main 2027 from Study track, or open `?exam=jee-main-2027&subject=chemistry` (also `maths` or `physics`). The track follows the 14 Mathematics, 20 Physics and 20 Chemistry units in the NTA syllabus at https://jeemain.nta.nic.in/document/syllabus-2027/. Unit descriptions summarize Paper 1, pages 1–11.
+
+The new track contains 108 original base questions and 108 paired variations across all 54 units. These are starter samples of selected ideas within each unit, with four choices and explanations. Thirty existing challenge questions are mapped to the new units; the Chemistry integrated second-order problem is replaced by an in-scope zero-order problem. These are original practice questions.
+
+JEE progress uses a distinct browser save key per subject. It currently saves on the device, and the new IDs are excluded from the existing account scoring catalog. Online account rewards for this bank need a server catalog update. In the JEE track, only a correct first confirmed attempt can earn XP; correcting a first mistake and challenge retries award 0 XP. Retakes still update mastery.
+
+Run `node check-jee-syllabus.cjs` with the existing regression checks. The service worker includes the new syllabus and question file for offline practice.

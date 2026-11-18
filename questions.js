@@ -90,6 +90,7 @@ const RAW = [
 ];
 const CHEMISTRY_QUESTIONS = RAW.flatMap((rows,t) => rows.map((r,i) => ({id:`${t}-${i}`,topic:t,prompt:r[0],options:r[1],answer:r[2],explanation:r[3]})));
 const isChemistry = typeof SUBJECT === 'undefined' || SUBJECT === 'chemistry';
-const TOPICS = isChemistry ? CHEMISTRY_TOPICS : SUBJECT_PATTERNS.map(([name, group])=>[name,group]);
-const QUESTIONS = isChemistry ? CHEMISTRY_QUESTIONS : subjectPractice(false);
+const useJee = typeof isJee !== 'undefined' && isJee;
+const TOPICS = useJee ? JEE_UNITS[SUBJECT].map(([name,group])=>[name,group]) : isChemistry ? CHEMISTRY_TOPICS : SUBJECT_PATTERNS.map(([name, group])=>[name,group]);
+const QUESTIONS = useJee ? jeePractice(false) : isChemistry ? CHEMISTRY_QUESTIONS : subjectPractice(false);
 if(typeof module !== 'undefined') module.exports = {TOPICS, QUESTIONS};

@@ -150,7 +150,7 @@ function showAnswerPopup(q,correct,earnedNow,response=state.response) {
  $('popup-symbol').textContent=correct?'🎉':'↻';
  $('popup-title').textContent=correct?'Correct! Let’s celebrate.':'Not quite. Try again!';
  $('popup-detail').textContent=correct
-  ? (earnedNow?'A new question mastered.':'Already mastered — no extra XP this time.')
+  ? (earnedNow?'A new question mastered.':isJee?'Already attempted — practice only, +0 XP.':'Already mastered — no extra XP this time.')
   : `Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}`;
  if(response.bonus) $('popup-detail').textContent='Six correct in a row! Your 20% bonus added 4 XP.';
  if(response.penalty) $('popup-detail').textContent=`Five wrong in a row: your XP was halved. Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}`;
@@ -202,6 +202,7 @@ function startRetake(mode) {
 function stats() {
  updateProfile();
  renderCounts();
+ renderSyllabusUnit();
  const level = Math.floor(state.xp/100)+1, progress=state.xp%100;
  $('level').textContent = level;
  $('rank').textContent = level < 4 ? 'Curious mind' : level < 8 ? 'Bond builder' : level < 12 ? 'Reaction pro' : 'Chemistry ace';
@@ -225,7 +226,7 @@ function stats() {
   const t = Number(button.dataset.topic);
   button.classList.toggle('active',state.filter === String(t));
   button.setAttribute('aria-pressed',state.filter === String(t));
-  button.querySelector('small').textContent = `${QUESTIONS.filter(q=>q.topic===t && state.results[q.id]?.earned).length}/4`;
+  button.querySelector('small').textContent = `${QUESTIONS.filter(q=>q.topic===t && state.results[q.id]?.earned).length}/${QUESTIONS.filter(q=>q.topic===t).length}`;
  });
  $('topic-select').value = state.filter;
  $('practice-title').textContent = state.filter==='all' ? 'Mixed practice' : state.filter==='review' ? 'Review mistakes' : TOPICS[Number(state.filter)][0];
@@ -292,7 +293,7 @@ function render(animate=false) {
  $('topic-pill').textContent=`${TOPICS[q.topic][0]}`;
  $('question-position').textContent=`${String(list.findIndex(x=>x.id===q.id)+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}`;
  $('next').innerHTML=answered?'Next question <span>→</span>':'Skip question <span>→</span>';
- $('reward-note').textContent=state.results[q.id]?.earned?'✓ XP earned · practise for confidence': state.streak%6===5?'✦ +24 XP if correct · streak bonus':'✦ +20 XP for a new correct answer';
+ $('reward-note').textContent=(isJee?state.results[q.id]:state.results[q.id]?.earned)?'Practice only · 0 XP on repeats': state.streak%6===5?'✦ +24 XP if correct · streak bonus':'✦ +20 XP for a new correct answer';
  if(answered) feedback(q,state.response.choice);
  if(animate) h.focus({preventScroll:true});
 }
@@ -305,9 +306,10 @@ function answer(choice) {
  $('confirmation-choice').textContent=`${'ABCD'[choice]}. ${q.options[choice]}`;
  $('confirmation-stakes').textContent=state.wrongStreak%5===4
   ? `You have 4 wrong in a row. Another wrong answer will halve your ${state.xp} XP.`
+  : isJee && state.results[q.id] ? 'You have already attempted this question. This practice answer earns 0 XP.'
   : state.streak%6===5 && !state.results[q.id]?.earned
    ? 'If correct, this answer earns 24 XP — including your 20% streak bonus.'
-   : 'Your answer will be checked only after you confirm.';
+   : isJee ? 'This is your first attempt. A wrong answer uses this question’s XP chance.' : 'Your answer will be checked only after you confirm.';
  $('confirm-answer').returnValue='';
  $('confirm-answer').showModal();
 }
@@ -321,10 +323,10 @@ function commitAnswer(choice) {
   $('next').focus({preventScroll:true});
  });
  if(remote)return remote;
- const correct=choice===q.answer, earnedNow=correct && !state.results[q.id]?.earned;
+ const correct=choice===q.answer, earnedNow=correct && (isJee?!state.results[q.id]:!state.results[q.id]?.earned);
  recordAttempt(q.topic,correct);
  const oldLevel=Math.floor(state.xp/100)+1;
- state.results[q.id]={choice,earned:earnedNow || !!state.results[q.id]?.earned};
+ state.results[q.id]={choice,earned:earnedNow || !!state.results[q.id]?.earned || (isJee&&correct)};
  const before=state.xp;
  state.streak=correct ? state.streak+1 : 0;state.best=Math.max(state.best,state.streak);
  state.wrongStreak=correct ? 0 : state.wrongStreak+1;
@@ -374,7 +376,7 @@ function next() {
 }
 // Navigation remains lightweight, with native select controls on small screens.
 for(const branch of new Set(TOPICS.map(([,group]) => group))) {
- const heading=document.createElement('div');heading.className='branch';heading.textContent=`${branch}${isChemistry ? ' chemistry' : ''}`;$('topics').append(heading);
+ const heading=document.createElement('div');heading.className='branch';heading.textContent=`${branch}${isChemistry && !isJee ? ' chemistry' : ''}`;$('topics').append(heading);
  TOPICS.forEach(([name,group],t)=>{
   if(group!==branch)return;
   const button=document.createElement('button');button.className='topic';
@@ -388,7 +390,8 @@ $('topic-total').textContent = TOPICS.length;
 $('subject-coverage').textContent = TOPICS.length+' topic groups · '+ALL_QUESTIONS.length+' explained questions';
 if (typeof SUBJECT !== 'undefined') {
  $('subject-'+SUBJECT).setAttribute('aria-current','page');
- if (!isChemistry) {
+ for(const subject of ['chemistry','maths','physics'])$('subject-'+subject).href=`./?subject=${subject}&exam=${isJee?'jee-main-2027':'eapcet'}`;
+ if (!isChemistry || isJee) {
   $('subject-heading').textContent = SUBJECT_LABEL;
   $('study-label').textContent = SUBJECT_LABEL+' practice';
   $('challenge-title').textContent = 'JEE-style '+SUBJECT_LABEL+' Challenge';
@@ -396,6 +399,27 @@ if (typeof SUBJECT !== 'undefined') {
   $('local-subject-note').hidden = false;
   document.title = SUBJECT_LABEL+' · Chemistry Quest';
  }
+}
+$('exam-select').value=isJee?'jee-main-2027':'eapcet';
+$('exam-select').addEventListener('change',event=>{
+ const query=`?subject=${SUBJECT}&exam=${event.target.value==='jee-main-2027'?'jee-main-2027':'eapcet'}`;
+ location.assign('./'+query);
+});
+if(isJee) {
+ $('exam-label-text').textContent='JEE MAIN · 2027';
+ $('study-label').textContent=`JEE Main 2027 · ${SUBJECT_LABEL}`;
+ $('syllabus-card').hidden=false;
+ $('syllabus-source').href=JEE_SYLLABUS_URL;
+ $('local-subject-note').textContent='JEE Main 2027 progress saves on this device. XP is available only on each question’s first confirmed attempt.';
+ $('challenge-title').textContent=`JEE Main 2027 · ${SUBJECT_LABEL} Challenge`;
+ $('practice-reward-rules').textContent='Earn 20 XP for a correct first confirmed attempt at each JEE question, or 24 XP on every sixth consecutive correct answer when it is also a first attempt. A wrong first attempt uses the reward chance. All repeats earn 0 XP. Skipping or cancelling keeps that chance available. Each distinct variation has its own first attempt. Every 100 current XP brings a level. JEE progress saves on this device.';
+ document.title=`${SUBJECT_LABEL} · JEE Main 2027 · Chemistry Quest`;
+ JEE_UNITS[SUBJECT].forEach(([name,,scope],index)=>{
+  const item=document.createElement('div');
+  const button=document.createElement('button');button.type='button';button.className='text-button';
+  button.textContent=`Unit ${index+1} · ${name}`;button.addEventListener('click',()=>setFilter(String(index)));
+  const detail=document.createElement('p');detail.textContent=scope;item.append(button,detail);$('syllabus-unit-list').append(item);
+ });
 }
 
 TOPICS.forEach(([name],t)=>{const option=document.createElement('option');option.value=String(t);option.textContent=name;$('topic-select').append(option);});

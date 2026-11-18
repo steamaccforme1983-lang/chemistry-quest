@@ -4,6 +4,11 @@
 const requestedSubject = new URLSearchParams(globalThis.location?.search || '').get('subject');
 const SUBJECT = ['maths','physics'].includes(requestedSubject) ? requestedSubject : 'chemistry';
 const SUBJECT_LABEL = {chemistry:'Chemistry',maths:'Maths',physics:'Physics'}[SUBJECT];
+let savedExam='eapcet';
+try{savedExam=localStorage.getItem('chemistry-quest-exam')||savedExam;}catch{}
+const selectedExam=new URLSearchParams(globalThis.location?.search || '').get('exam')||savedExam;
+const isJee=selectedExam==='jee-main-2027';
+try{localStorage.setItem('chemistry-quest-exam',isJee?'jee-main-2027':'eapcet');}catch{}
 
 function exercise(prompt, correct, distractors, explanation, position) {
  const options = distractors.slice();

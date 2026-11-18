@@ -83,6 +83,6 @@ const ALT_RAW = [
  ]
 ];
 const CHEMISTRY_VARIANTS=ALT_RAW.flatMap((rows,t)=>rows.map((r,i)=>({id:`v-${t}-${i}`,topic:t,pattern:`${t}-${i}`,prompt:r[0],options:r[1],answer:r[2],explanation:r[3]})));
-const VARIANTS = isChemistry ? CHEMISTRY_VARIANTS : subjectPractice(true);
+const VARIANTS = useJee ? jeePractice(true) : isChemistry ? CHEMISTRY_VARIANTS : subjectPractice(true);
 const ALL_QUESTIONS=[...QUESTIONS,...VARIANTS];
 if(typeof module!=='undefined')module.exports={ALT_RAW,VARIANTS};

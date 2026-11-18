@@ -1,6 +1,6 @@
 'use strict';
 (() => {
- if (!isChemistry) return;
+ if (!isChemistry || isJee) return;
  const ENDPOINT='https://bmgrefwvjqaqbljieqme.supabase.co/functions/v1/chemistry-accounts';
  const GUEST='chemistry-quest-v1',SESSION='chemistry-quest-session';
  let session=null,meta={revision:0,dirty:false},mode='login',applying=false,inFlight=false;
