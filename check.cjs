@@ -68,14 +68,14 @@ assert.match(reload.elements['popup-title'].textContent,/Try again!/);
 assert.equal(reload.elements['answer-confetti'].hidden,true);
 assert.equal(reload.elements['answer-confetti'].children.length,0);
 reload.run("setFilter('review')");assert.equal(reload.snapshot().current,'0-1');
-reload.run('submit(2)');assert.equal(reload.snapshot().xp,40);
+reload.run('submit(2)');assert.equal(reload.snapshot().xp,20);
 reload.run('next()');assert.equal(reload.snapshot().current,null);
 reload.run('next()');assert.equal(reload.snapshot().filter,'all');
 // Revisiting a previously mastered question never duplicates XP.
 reload.run("state.current='0-0';state.response=null;render();submit(3)");
-assert.equal(reload.snapshot().xp,40);
+assert.equal(reload.snapshot().xp,20);
 assert.equal(reload.elements['popup-xp'].textContent,'+0 XP');
-assert.match(reload.elements['popup-detail'].textContent,/Already mastered/);
+assert.match(reload.elements['popup-detail'].textContent,/Practice only/);
 reload.elements['dismiss-answer-popup'].click();assert.equal(reload.elements['answer-popup'].hidden,true);
 assert.equal(reload.elements['answer-confetti'].children.length,0);
 reload.run("setFilter('15')");assert.ok(reload.snapshot().current.startsWith('15-'));

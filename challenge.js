@@ -15,11 +15,14 @@ const CHEMISTRY_CHALLENGE_QUESTIONS = [
 const CHALLENGE_QUESTIONS = isChemistry ? CHEMISTRY_CHALLENGE_QUESTIONS : subjectChallenge();
 let challengePending=null;
 function validateChallenge() {
+ state.challengeAttempted=Object.fromEntries(CHALLENGE_QUESTIONS
+  .filter(q=>state.challengeAttempted[q.id]===true||state.challengeEarned[q.id]===true)
+  .map(q=>[q.id,true]));
  const c=state.challenge;
  if(!c)return;
  if(!['active','finished'].includes(c.status)||!Number.isFinite(c.deadline)||!Number.isInteger(c.index)||c.index<0||c.index>9||!c.answers||typeof c.answers!=='object'){state.challenge=null;return;}
  const clean={};
- CHALLENGE_QUESTIONS.forEach((q,i)=>{const a=c.answers[i];if(a&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)clean[i]={choice:a.choice,xp:Number.isInteger(a.xp)&&a.xp>=0&&a.xp<=90?a.xp:0};});c.answers=clean;
+ CHALLENGE_QUESTIONS.forEach((q,i)=>{const a=c.answers[i];if(a&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4){clean[i]={choice:a.choice,xp:Number.isInteger(a.xp)&&a.xp>=0&&a.xp<=90?a.xp:0};state.challengeAttempted[q.id]=true;}});c.answers=clean;
 }
 function challengeTimeLeft() {return Math.max(0,Math.ceil(((state.challenge?.deadline||0)-Date.now())/1000));}
 function challengeTick() {
@@ -53,6 +56,9 @@ function selectChallengeAnswer(choice) {
  dismissAnswerPopup();challengePending={index:c.index,choice};
  const q=CHALLENGE_QUESTIONS[c.index];
  $('challenge-choice').textContent=`${'ABCD'[choice]}. ${q.options[choice]}`;
+ $('challenge-reward-stakes').textContent=state.challengeAttempted[q.id]
+  ? 'Practice only: this question has already been attempted and earns 0 XP.'
+  : `First attempt: +${q.xp} XP if correct. A wrong answer uses this XP chance.`;
  $('challenge-confirm').returnValue='';$('challenge-confirm').showModal();
 }
 function commitChallengeAnswer(index,choice) {
@@ -65,9 +71,10 @@ function commitChallengeAnswer(index,choice) {
   if(level>oldLevel)showLevelUp(level,receipt.delta);
  });
  if(remote)return remote;
- const reward=correct&&!state.challengeEarned[q.id]?q.xp:0;
+ const reward=correct&&!state.challengeAttempted[q.id]?q.xp:0;
  const oldLevel=Math.floor(state.xp/100)+1;
  c.answers[index]={choice,xp:reward};
+ state.challengeAttempted[q.id]=true;
  if(correct)state.challengeEarned[q.id]=true;
  state.xp+=reward;recordAttempt(q.topic,correct);
  save();stats();renderChallenge();
@@ -88,7 +95,7 @@ function renderChallenge() {
   const answered=Object.keys(c.answers).length,correct=CHALLENGE_QUESTIONS.filter((q,i)=>c.answers[i]?.choice===q.answer).length;
   const xp=Object.values(c.answers).reduce((sum,a)=>sum+a.xp,0);
   const title=document.createElement('h3');title.textContent=`${correct} / 10 correct · ${xp} XP earned`;
-  const p=document.createElement('p');p.textContent=`${answered} answered · ${answered-correct} wrong · ${10-answered} unanswered. Retry for practice; each question awards XP once.`;
+  const p=document.createElement('p');p.textContent=`${answered} answered · ${answered-correct} wrong · ${10-answered} unanswered. Retries give 0 XP for questions you have already attempted.`;
   content.append(title,p);
   CHALLENGE_QUESTIONS.forEach((q,i)=>{const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent=`${i+1}. ${c.answers[i]?(c.answers[i].choice===q.answer?'✓ Correct':'× Wrong'):'Unanswered'} · ${TOPICS[q.topic][0]}`;const text=document.createElement('p');const chosen=c.answers[i];text.textContent=`${q.prompt} ${chosen?`Your answer: ${'ABCD'[chosen.choice]}. ${q.options[chosen.choice]}.`:'You did not answer this question.'} Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}. ${q.explanation}`;details.append(summary,text);content.append(details)});
   return;
@@ -96,7 +103,7 @@ function renderChallenge() {
  const nav=document.createElement('div');nav.className='challenge-nav';nav.setAttribute('aria-label','Challenge questions');
  CHALLENGE_QUESTIONS.forEach((q,i)=>{const b=document.createElement('button');b.textContent=i+1;b.className=`challenge-dot${i===c.index?' current':''}${c.answers[i]?' answered':''}`;b.setAttribute('aria-label',`Question ${i+1}${c.answers[i]?', answered':''}`);b.setAttribute('aria-current',i===c.index?'step':'false');b.addEventListener('click',()=>{challengeTick();if(c.status!=='active')return;c.index=i;save();renderChallenge()});nav.append(b)});
  const q=CHALLENGE_QUESTIONS[c.index],a=c.answers[c.index];
- const meta=document.createElement('p');meta.className='challenge-meta';meta.textContent=`${TOPICS[q.topic][0]} · Question ${c.index+1} / 10 · ${state.challengeEarned[q.id]?'XP already earned':`${q.xp} XP if correct`}`;
+ const meta=document.createElement('p');meta.className='challenge-meta';meta.textContent=`${TOPICS[q.topic][0]} · Question ${c.index+1} / 10 · ${state.challengeAttempted[q.id]?'Practice only · 0 XP':`First attempt · ${q.xp} XP if correct`}`;
  const h=document.createElement('h3');h.textContent=q.prompt;
  const options=document.createElement('div');options.className='options';
  q.options.forEach((text,i)=>{const b=document.createElement('button');b.className='option';b.textContent=`${'ABCD'[i]}. ${text}`;b.disabled=!!a;if(a&&(i===q.answer||i===a.choice))b.classList.add(i===q.answer?'correct':'wrong');b.addEventListener('click',()=>selectChallengeAnswer(i));options.append(b)});

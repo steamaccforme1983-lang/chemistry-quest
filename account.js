@@ -55,7 +55,7 @@
    if(ticket!==epoch)return;
    meta.revision=data.revision;meta.dirty=sequence!==change;cacheMeta();
    if(!meta.dirty&&data.serverScoring){
-    const checked=load(data.progress),fields=['xp','streak','best','wrongStreak','results','activity','challengeEarned','challenge'];
+    const checked=load(data.progress),fields=['xp','streak','best','wrongStreak','results','activity','challengeEarned','challengeAttempted','challenge'];
     if(fields.some(key=>JSON.stringify(state[key])!==JSON.stringify(checked[key]))){const visits=visitCounts;replaceProgress(data.progress);visitCounts=visits;renderCounts();}
    }
    status(meta.dirty?'Syncing newer changes…':'Progress saved online ✓');

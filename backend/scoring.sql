@@ -168,6 +168,7 @@ language sql immutable set search_path='' as $$
  'best',coalesce(p->'best','0'::jsonb),'wrongStreak',coalesce(p->'wrongStreak','0'::jsonb),
  'results',coalesce(p->'results','{}'::jsonb),'activity',coalesce(p->'activity','{}'::jsonb),
  'challengeEarned',coalesce(p->'challengeEarned','{}'::jsonb),
+ 'challengeAttempted',coalesce(p->'challengeAttempted','{}'::jsonb),
  'challenge',coalesce(p->'challenge','null'::jsonb));
 $$;
 -- Capture the existing SERVER copy only. Never seed from a future client upload.
@@ -233,23 +234,24 @@ begin
      end if;
      choice:=(event->>'choice')::int;correct:=choice=q.answer;
      if kind='practice' then
-      earned:=correct and not coalesce((s->'results'->qid->>'earned')::boolean,false);
+      earned:=correct and not (s->'results' ? qid);
       streak:=case when correct then streak+1 else 0 end;
       wrongs:=case when correct then 0 else wrongs+1 end;
       best:=greatest(best,streak);bonus:=earned and streak%6=0;penalty:=not correct and wrongs%5=0;
       if earned then xp:=xp+case when bonus then 24 else 20 end;end if;
       if penalty then xp:=xp/2;end if;
-      s:=jsonb_set(s,'{results}',(s->'results')||jsonb_build_object(qid,jsonb_build_object('choice',choice,'earned',earned or coalesce((s->'results'->qid->>'earned')::boolean,false))));
+      s:=jsonb_set(s,'{results}',(s->'results')||jsonb_build_object(qid,jsonb_build_object('choice',choice,'earned',earned or coalesce((s->'results'->qid->>'earned')::boolean,false),'solved',correct or coalesce((s->'results'->qid->>'solved')::boolean,false) or coalesce((s->'results'->qid->>'earned')::boolean,false))));
      else
       idx:=substring(qid from 5);idx:=((idx::int)-1)::text;
       if c->>'status' is distinct from 'active' or c->'answers' ? idx then
        return jsonb_build_object('error','This challenge answer is already submitted or the timer has ended. Sync to see its result.','status',409);
       end if;
-      earned:=correct and not coalesce((s->'challengeEarned'->>qid)::boolean,false);
+      earned:=correct and not (coalesce(s->'challengeAttempted','{}'::jsonb) ? qid);
       reward:=case when earned then q.reward else 0 end;xp:=xp+reward;
       c:=jsonb_set(c,'{index}',to_jsonb(idx::int));
       c:=jsonb_set(c,'{answers}',(c->'answers')||jsonb_build_object(idx,jsonb_build_object('choice',choice,'xp',reward)));
       if correct then s:=jsonb_set(s,'{challengeEarned}',(s->'challengeEarned')||jsonb_build_object(qid,true));end if;
+      s:=jsonb_set(s,'{challengeAttempted}',coalesce(s->'challengeAttempted','{}'::jsonb)||jsonb_build_object(qid,true));
       if (select count(*) from jsonb_object_keys(c->'answers'))=10 then c:=c||'{"status":"finished","reason":"completed"}'::jsonb;end if;
       s:=jsonb_set(s,'{challenge}',c);
      end if;
@@ -284,11 +286,9 @@ begin
   update cq_private.scoring set summary=s where account_id=a.id;
   update cq_private.accounts set progress=coalesce(a.progress,'{"version":2}'::jsonb)||s,revision=revision+1 where accounts.id=a.id returning * into a;
  end if;
- return jsonb_build_object('user',jsonb_build_object('id',a.id,'email',a.email),'progress',a.progress,'revision',a.revision,'receipt',receipt,'serverScoring',true);
+ return jsonb_build_object('user',jsonb_build_object('id',a.id,'email',a.email),'progress',a.progress,'revision',a.revision,'receipt',receipt,'serverScoring',true,'firstAttemptRewards',true);
 end; $$;
 revoke all on function public.cq_account_api(text,jsonb),public.cq_account_api_v1(text,jsonb),cq_private.initial_score(jsonb) from public,anon,authenticated;
 grant execute on function public.cq_account_api(text,jsonb),public.cq_account_api_v1(text,jsonb),cq_private.initial_score(jsonb) to service_role;
 commit;
 select 'Server scoring installed; browser score uploads can no longer alter account XP.' as result;
-
-
