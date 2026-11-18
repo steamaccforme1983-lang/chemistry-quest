@@ -1,7 +1,7 @@
 'use strict';
 let KEY = GUEST_PROGRESS_KEY;
 const $ = id => document.getElementById(id);
-const fresh = () => ({version:2,xp:0,streak:0,wrongStreak:0,best:0,quoteCursor:0,stickerLevel:1,avatarLevel:1,displayName:'',activity:{},topicTests:{},round:null,challenge:null,challengeEarned:{},results:{},filter:'all',current:null,response:null});
+const fresh = () => ({version:2,xp:0,streak:0,wrongStreak:0,best:0,quoteCursor:0,stickerLevel:1,avatarLevel:1,displayName:'',activity:{},topicTests:{},round:null,challenge:null,challengeEarned:{},challengeAttempted:{},results:{},filter:'all',current:null,response:null});
 function validDeck(ids,filter) {
  const base=filter==='all'?QUESTIONS:QUESTIONS.filter(q=>q.topic===Number(filter));
  return Array.isArray(ids)&&ids.length===base.length&&new Set(ids).size===ids.length&&base.every(q=>ids.includes(q.id)||ids.includes(`v-${q.id}`));
@@ -14,7 +14,7 @@ function load(snapshot) {
   const state = fresh();
   for(const q of ALL_QUESTIONS) {
    const r = raw.results?.[q.id];
-   if(r && Number.isInteger(r.choice) && r.choice >= 0 && r.choice < 4 && typeof r.earned === 'boolean') state.results[q.id] = {choice:r.choice,earned:r.earned};
+   if(r && Number.isInteger(r.choice) && r.choice >= 0 && r.choice < 4 && typeof r.earned === 'boolean') state.results[q.id] = {choice:r.choice,earned:r.earned,solved:r.solved===true||r.earned||r.choice===q.answer};
   }
   for(let t=0;t<TOPICS.length;t++) {
    const a=raw.activity?.[t];
@@ -23,6 +23,7 @@ function load(snapshot) {
   }
   state.challenge=raw.challenge || null;
   state.challengeEarned=raw.challengeEarned && typeof raw.challengeEarned==='object'?raw.challengeEarned:{};
+  state.challengeAttempted=raw.challengeAttempted && typeof raw.challengeAttempted==='object'?raw.challengeAttempted:{};
   for(const filter of ['all',...TOPICS.map((_,i)=>String(i))])if(validDeck(raw.topicTests?.[filter],filter))state.topicTests[filter]=raw.topicTests[filter];
   // Old saves migrate without losing mastery. New balances include bonuses and penalties.
   state.xp = raw.version === 2 && Number.isSafeInteger(raw.xp) && raw.xp >= 0
@@ -150,7 +151,7 @@ function showAnswerPopup(q,correct,earnedNow,response=state.response) {
  $('popup-symbol').textContent=correct?'🎉':'↻';
  $('popup-title').textContent=correct?'Correct! Let’s celebrate.':'Not quite. Try again!';
  $('popup-detail').textContent=correct
-  ? (earnedNow?'A new question mastered.':'Already mastered — no extra XP this time.')
+  ? (earnedNow?'A new question mastered.':'Practice only — this question was attempted earlier. +0 XP.')
   : `Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}`;
  if(response.bonus) $('popup-detail').textContent='Six correct in a row! Your 20% bonus added 4 XP.';
  if(response.penalty) $('popup-detail').textContent=`Five wrong in a row: your XP was halved. Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}`;
@@ -177,7 +178,7 @@ function activeQuestion() {return ALL_QUESTIONS.find(q=>q.id===state.current);}
 function chooseInitial() {
  const list = pool();
  if(!list.some(q=>q.id===state.current)) {
-  state.current = (list.find(q=>!state.results[q.id]) || list.find(q=>!state.results[q.id]?.earned) || list[0])?.id || null;
+  state.current = (list.find(q=>!state.results[q.id]) || list.find(q=>!state.results[q.id]?.solved) || list[0])?.id || null;
   state.response = null;
  }
  if(state.round)state.response=state.round.answers[state.current]||null;
@@ -225,7 +226,7 @@ function stats() {
   const t = Number(button.dataset.topic);
   button.classList.toggle('active',state.filter === String(t));
   button.setAttribute('aria-pressed',state.filter === String(t));
-  button.querySelector('small').textContent = `${QUESTIONS.filter(q=>q.topic===t && state.results[q.id]?.earned).length}/4`;
+  button.querySelector('small').textContent = `${QUESTIONS.filter(q=>q.topic===t && state.results[q.id]?.solved).length}/4`;
  });
  $('topic-select').value = state.filter;
  $('practice-title').textContent = state.filter==='all' ? 'Mixed practice' : state.filter==='review' ? 'Review mistakes' : TOPICS[Number(state.filter)][0];
@@ -237,14 +238,14 @@ function stats() {
   const correct=round.ids.filter(id=>round.answers[id]?.choice===ALL_QUESTIONS.find(q=>q.id===id).answer).length;
   $('retake-status').textContent=`${round.mode==='random'?'Random variations':'Same questions'} · ${answered}/${round.ids.length} answered · ${correct} correct · ${answered-correct} wrong${round.finished?' · Finished':''}`;
  } else $('retake-status').textContent='Retake this topic or mixed set. Same repeats your last set; Random changes the questions.';
- $('mastery').textContent = state.filter==='review' ? `${missed().length} to revisit` : `${list.filter(q=>state.results[q.id]?.earned).length} of ${list.length} mastered`;
+ $('mastery').textContent = state.filter==='review' ? `${missed().length} to revisit` : `${list.filter(q=>state.results[q.id]?.solved).length} of ${list.length} mastered`;
 }
 function feedback(q,choice,earnedNow=false) {
  const correct=choice===q.answer;
  const box=$('feedback');box.hidden=false;box.className=`feedback${correct?'':' incorrect'}`;box.replaceChildren();
  const title=document.createElement('strong');
  const reward=state.response?.id===q.id?state.response:null;
- title.textContent=correct ? (reward?.delta>0 ? `Nicely done! +${reward.delta} XP${reward.bonus?' · 20% streak bonus':''}` : 'That’s right. Keep it fresh!') : `Good try. The answer is ${'ABCD'[q.answer]}.${reward?.penalty?` XP halved: ${reward.delta} XP.`:''}`;
+ title.textContent=correct ? (reward?.delta>0 ? `Nicely done! +${reward.delta} XP${reward.bonus?' · 20% streak bonus':''}` : 'That’s right. Practice only · +0 XP.') : `Good try. The answer is ${'ABCD'[q.answer]}.${reward?.penalty?` XP halved: ${reward.delta} XP.`:''}`;
  const p=document.createElement('p');p.textContent=q.explanation;box.append(title,p);
 }
 function render(animate=false) {
@@ -292,7 +293,7 @@ function render(animate=false) {
  $('topic-pill').textContent=`${TOPICS[q.topic][0]}`;
  $('question-position').textContent=`${String(list.findIndex(x=>x.id===q.id)+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}`;
  $('next').innerHTML=answered?'Next question <span>→</span>':'Skip question <span>→</span>';
- $('reward-note').textContent=state.results[q.id]?.earned?'✓ XP earned · practise for confidence': state.streak%6===5?'✦ +24 XP if correct · streak bonus':'✦ +20 XP for a new correct answer';
+ $('reward-note').textContent=state.results[q.id]?'Practice only · 0 XP on repeats': state.streak%6===5?'✦ First attempt · +24 XP if correct':'✦ First attempt · +20 XP if correct';
  if(answered) feedback(q,state.response.choice);
  if(animate) h.focus({preventScroll:true});
 }
@@ -305,9 +306,10 @@ function answer(choice) {
  $('confirmation-choice').textContent=`${'ABCD'[choice]}. ${q.options[choice]}`;
  $('confirmation-stakes').textContent=state.wrongStreak%5===4
   ? `You have 4 wrong in a row. Another wrong answer will halve your ${state.xp} XP.`
-  : state.streak%6===5 && !state.results[q.id]?.earned
+  : state.results[q.id] ? 'Practice only: you have already attempted this question. This answer cannot earn XP.'
+  : state.streak%6===5
    ? 'If correct, this answer earns 24 XP — including your 20% streak bonus.'
-   : 'Your answer will be checked only after you confirm.';
+   : 'This is your only XP attempt for this question. Confirm when you’re ready.';
  $('confirm-answer').returnValue='';
  $('confirm-answer').showModal();
 }
@@ -321,10 +323,10 @@ function commitAnswer(choice) {
   $('next').focus({preventScroll:true});
  });
  if(remote)return remote;
- const correct=choice===q.answer, earnedNow=correct && !state.results[q.id]?.earned;
+ const correct=choice===q.answer, earnedNow=correct && !state.results[q.id];
  recordAttempt(q.topic,correct);
  const oldLevel=Math.floor(state.xp/100)+1;
- state.results[q.id]={choice,earned:earnedNow || !!state.results[q.id]?.earned};
+ state.results[q.id]={choice,earned:earnedNow || !!state.results[q.id]?.earned,solved:correct || !!state.results[q.id]?.solved};
  const before=state.xp;
  state.streak=correct ? state.streak+1 : 0;state.best=Math.max(state.best,state.streak);
  state.wrongStreak=correct ? 0 : state.wrongStreak+1;
@@ -338,7 +340,7 @@ function commitAnswer(choice) {
  showAnswerPopup(q,correct,earnedNow);
  const level=Math.floor(state.xp/100)+1;
  if(level>oldLevel) showLevelUp(level);
- else if(earnedNow && ALL_QUESTIONS.every(item=>state.results[item.id]?.earned)) toast('All topic questions mastered. Brilliant work!');
+ else if(correct && ALL_QUESTIONS.every(item=>state.results[item.id]?.solved)) toast('All topic questions mastered. Brilliant work!');
  $('next').focus({preventScroll:true});
 }
 function setFilter(value) {
