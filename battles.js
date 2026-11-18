@@ -6,6 +6,7 @@ function setupBattles(request) {
  const play = $('battle-play');
  const status = $('battle-status');
  let busy = false;
+ let generation = 0;
  let selected = null;
  let data = null;
  const drafts = new Map();
@@ -110,11 +111,12 @@ function setupBattles(request) {
  async function send(action, args={}, message='') {
   if (busy) return;
   busy = true;
+  const ticket = generation;
   const owner = KEY;
   status.textContent = 'Loading…';
   try {
    const response = await request('progress', {progress:{_battle:{action,...args}}});
-   if (KEY !== owner) return;
+   if (KEY !== owner || ticket !== generation) return;
    if (!Array.isArray(response.battles) || !response.playerCode) throw new Error('Friend battles are temporarily unavailable.');
    data = response;
    if (action === 'invite') $('battle-friend-code').value = '';
@@ -122,14 +124,16 @@ function setupBattles(request) {
    render();
    status.textContent = message;
   } catch (error) {
-   if (KEY !== owner) return;
+   if (KEY !== owner || ticket !== generation) return;
    status.textContent = error.message || 'Could not reach the battle service. Try again online.';
   } finally {
-   busy = false;
+   if (ticket === generation) busy = false;
   }
  }
 
  $('battles-open').addEventListener('click', () => {
+  generation++;
+  busy = false;
   selected = null;
   data = null;
   $('battle-player-code').textContent = '';
@@ -156,5 +160,17 @@ function setupBattles(request) {
    status.textContent = 'Select and copy the player ID above.';
   }
  });
- $('account-logout').addEventListener('click', () => {drafts.clear();});
+ return () => {
+  generation++;
+  busy = false;
+  selected = null;
+  data = null;
+  drafts.clear();
+  $('battle-player-code').textContent = '';
+  $('battle-invite').hidden = true;
+  $('battle-copy').hidden = true;
+  list.replaceChildren();
+  play.replaceChildren();
+  play.hidden = true;
+ };
 }

@@ -21,7 +21,10 @@ class Element {
  click(){if(!this.disabled)(this.listeners.click||[]).forEach(fn=>fn({target:this}))}
 }
 function boot(saved=null,blocked=false,extra={}){
- let persisted=saved;const elements={},storage=new Map();if(saved)storage.set('chemistry-quest-v1',saved);
+ let persisted=saved;const elements={},storage=new Map();
+ const subject=new URLSearchParams(extra.location?.search||'').get('subject');
+ const savedKey=['maths','physics'].includes(subject)?`chemistry-quest-${subject}-v1`:'chemistry-quest-v1';
+ if(saved)storage.set(savedKey,saved);
  const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
  for(const [tag,id] of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)){elements[id]=new Element();elements[id].hidden=/\bhidden(?:\s|>)/.test(tag);}
  const appElement=new Element('main');

@@ -35,7 +35,8 @@ function load(snapshot) {
   state.best = Math.max(state.streak,Number.isSafeInteger(raw.best) && raw.best >= 0 ? raw.best : 0);
   state.wrongStreak = !state.streak && Number.isSafeInteger(raw.wrongStreak) && raw.wrongStreak >= 0 ? raw.wrongStreak : 0;
   state.quoteCursor = Number.isSafeInteger(raw.quoteCursor) && raw.quoteCursor >= 0 ? raw.quoteCursor : 0;
-  state.filter = raw.filter === 'review' || raw.filter === 'all' || TOPICS[raw.filter] ? raw.filter : 'all';
+  const savedFilter = typeof raw.filter === 'number' ? String(raw.filter) : raw.filter;
+  state.filter = ['all','review',...TOPICS.map((_,i)=>String(i))].includes(savedFilter) ? savedFilter : 'all';
   state.current = ALL_QUESTIONS.some(q => q.id === raw.current) ? raw.current : null;
   const round=raw.round;
   if(round&&round.filter===state.filter&&validDeck(round.ids,state.filter)) {
@@ -359,8 +360,11 @@ function next() {
  }
  if(!pool().length && !activeQuestion()){setFilter('all');return;}
  if(state.filter==='review') {
+  const currentIndex=ALL_QUESTIONS.findIndex(q=>q.id===state.current);
   reviewQueue=missed().map(q=>q.id);
-  if(!reviewQueue.length){state.current=null;state.response=null;render(true);save();return;}
+  state.current=[...ALL_QUESTIONS.slice(currentIndex+1),...ALL_QUESTIONS.slice(0,currentIndex+1)]
+   .find(q=>reviewQueue.includes(q.id))?.id||null;
+  state.response=null;render(true);save();return;
  }
  const list=pool();
  if(!list.length){setFilter('all');return;}

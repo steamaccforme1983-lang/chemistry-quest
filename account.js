@@ -135,7 +135,7 @@
   if(locked)$('account-message').textContent=`Too many failed attempts. Try again in ${Math.floor(seconds/60)}m ${seconds%60}s. The wait also applies on other devices.`;
   else if(blockedIdentity===identity()&&blockedUntil){blockedUntil=0;$('account-message').textContent='You can try again now. You have 3 attempts.';}
  }
- globalThis.setupBattles?.(request);
+ const resetBattles=globalThis.setupBattles?.(request);
  $('owner-open').addEventListener('click', async () => {
   if (!session || !ownerAvatarAccess) return;
   const result = $('owner-result');
@@ -172,6 +172,7 @@
  });
  $('account-form').addEventListener('submit',async event=>{
   event.preventDefault();if(busy||Date.now()<blockedUntil&&blockedIdentity===identity())return;
+  const submittedIdentity=identity();
   busy=true;updateCountdown();$('account-message').textContent='Please wait…';
   try{
    const password=$('account-password').value;
@@ -181,7 +182,7 @@
    await receiveAccount(data);$('account-message').textContent='';
    if(data.recoveryCode){$('account-dialog').close();$('new-recovery-code').value=data.recoveryCode;$('recovery-saved-dialog').showModal();}
   }catch(error){
-   if(error.retryAfter){blockedUntil=Date.now()+error.retryAfter*1000;blockedIdentity=identity();}
+   if(error.retryAfter){blockedUntil=Date.now()+error.retryAfter*1000;blockedIdentity=submittedIdentity;}
    $('account-message').textContent=error.message+(Number.isInteger(error.attemptsLeft)?` ${error.attemptsLeft} attempts left.`:'');
   }finally{busy=false;updateCountdown();}
  });
@@ -216,6 +217,7 @@
  });
  $('account-logout').addEventListener('click',async()=>{
   if(inFlight){status('Wait for the current sync to finish, then sign out.');return;}
+  resetBattles?.();
   const token=session?.token;epoch++;clearTimeout(saveTimer);session=null;
   try{localStorage.removeItem(SESSION)}catch{}
   ownerAvatarAccess=false;
