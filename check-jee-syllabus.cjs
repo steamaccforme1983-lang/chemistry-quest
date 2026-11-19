@@ -6,8 +6,8 @@ for(const [subject,count] of [['maths',14],['physics',20],['chemistry',20]]) {
  let app=boot(null,false,options);
  assert.equal(app.run('isJee'),true);
  assert.equal(app.run('TOPICS.length'),count);
- assert.equal(app.run('QUESTIONS.length'),2*count);
- assert.equal(app.run('ALL_QUESTIONS.length'),4*count);
+ assert.equal(app.run('QUESTIONS.length'),(subject==='chemistry'?10:2)*count);
+ assert.equal(app.run('ALL_QUESTIONS.length'),(subject==='chemistry'?20:4)*count);
  assert.equal(app.run('CHALLENGE_QUESTIONS.length'),10);
  assert.equal(app.run('KEY'),`chemistry-quest-jee-main-2027-${subject}-v1`);
  assert.equal(app.elements['account-open'].hidden,true);
@@ -25,7 +25,7 @@ for(const [subject,count] of [['maths',14],['physics',20],['chemistry',20]]) {
  }
  for(let unit=0;unit<count;unit++){
   app.run(`setFilter('${unit}')`);
-  assert.equal(app.run('pool().length'),2);
+  assert.equal(app.run('pool().length'),subject==='chemistry'?10:2);
   assert.match(app.elements['syllabus-current'].textContent,new RegExp(`Unit ${unit+1} ·`));
   assert.ok(app.elements['syllabus-scope'].textContent.length>40);
  }
@@ -46,7 +46,7 @@ for(const [subject,count] of [['maths',14],['physics',20],['chemistry',20]]) {
  assert.equal(reloaded.run('state.xp'),20);
  assert.equal(reloaded.run('state.challenge.answers[0].xp'),0);
  assert.equal(boot(JSON.stringify({version:2,xp:120})).run('state.xp'),120);
- total+=4*count;
+ total+=(subject==='chemistry'?20:4)*count;
 }
-assert.equal(total,216);
-console.log('PASS: 54 JEE Main 2027 units, 216 distinct practice questions, 30 mapped challenge questions, source scopes, all unit filters, exam links, isolated saves, retakes, first-attempt XP and reloads.');
+assert.equal(total,536);
+console.log('PASS: 54 JEE Main 2027 units, 536 distinct practice questions, 30 mapped challenge questions, source scopes, all unit filters, exam links, isolated saves, retakes, first-attempt XP and reloads.');

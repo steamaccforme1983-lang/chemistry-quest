@@ -29,11 +29,12 @@ function boot(saved=null,blocked=false,extra={}){
  const html=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
  for(const [tag,id] of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)){elements[id]=new Element();elements[id].hidden=/\bhidden(?:\s|>)/.test(tag);}
  const appElement=new Element('main');
- const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),createTextNode:text=>({textContent:text}),body:new Element('body'),querySelector:selector=>selector==='.app'?appElement:null,addEventListener(){},querySelectorAll:selector=>selector==='.topic'?elements.topics.children.filter(x=>x.className.split(' ').includes('topic')):[]};
+ const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),createTextNode:text=>({textContent:text}),body:new Element('body'),querySelector:selector=>selector==='.app'?appElement:null,addEventListener(){},querySelectorAll:selector=>{const descend=node=>node.children.flatMap(child=>[child,...descend(child)]);return selector==='.topic'?descend(elements.topics).filter(x=>x.className?.split(' ').includes('topic')):[]}};
  const context=vm.createContext({document,localStorage:{getItem(k){if(blocked)throw Error('disabled');return storage.get(k)||null},setItem(k,v){if(blocked)throw Error('disabled');storage.set(k,v);persisted=v},removeItem(k){storage.delete(k)}},setTimeout:()=>1,setInterval:()=>1,clearTimeout(){},console,URLSearchParams,...extra});
- for(const file of ['subjects.js','jee-2027.js','subject-challenges.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,file),'utf8'),context);
+ for(const file of ['subjects.js','jee-2027.js','chemistry-syllabus-2027.js','chemistry-questions-2027.js','subject-challenges.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,file),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'questions.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'variants.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'chemistry-study.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'stickers.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'app.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'challenge.js'),'utf8'),context);

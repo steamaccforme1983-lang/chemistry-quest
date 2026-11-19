@@ -1,9 +1,13 @@
 'use strict';
 let KEY = GUEST_PROGRESS_KEY;
 const $ = id => document.getElementById(id);
-const fresh = () => ({version:2,xp:0,streak:0,wrongStreak:0,best:0,quoteCursor:0,stickerLevel:1,avatarLevel:1,displayName:'',activity:{},topicTests:{},round:null,challenge:null,challengeEarned:{},results:{},filter:'all',current:null,response:null});
+const fresh = () => ({version:2,xp:0,streak:0,wrongStreak:0,best:0,quoteCursor:0,stickerLevel:1,avatarLevel:1,displayName:'',activity:{},topicTests:{},round:null,challenge:null,challengeEarned:{},chemistryStudy:freshChemistryStudy(),results:{},filter:'all',current:null,response:null});
 function validDeck(ids,filter) {
  const base=filter==='all'?QUESTIONS:QUESTIONS.filter(q=>q.topic===Number(filter));
+ if(isChemistry2027&&Array.isArray(ids)){
+  const previous=base.filter(q=>/-(0|1)$/.test(q.id));
+  if(ids.length===previous.length&&new Set(ids).size===ids.length&&previous.every(q=>ids.includes(q.id)||ids.includes(`v-${q.id}`)))return true;
+ }
  return Array.isArray(ids)&&ids.length===base.length&&new Set(ids).size===ids.length&&base.every(q=>ids.includes(q.id)||ids.includes(`v-${q.id}`));
 }
 let storageOK = true;
@@ -19,8 +23,9 @@ function load(snapshot) {
   for(let t=0;t<TOPICS.length;t++) {
    const a=raw.activity?.[t];
    if(a && Number.isSafeInteger(a.correct) && a.correct>=0 && Number.isSafeInteger(a.wrong) && a.wrong>=0)state.activity[t]={correct:a.correct,wrong:a.wrong};
-   else {const rows=QUESTIONS.filter(q=>q.topic===t&&state.results[q.id]);state.activity[t]={correct:rows.filter(q=>state.results[q.id].choice===q.answer).length,wrong:rows.filter(q=>state.results[q.id].choice!==q.answer).length};}
+   else {const rows=ALL_QUESTIONS.filter(q=>q.topic===t&&state.results[q.id]);state.activity[t]={correct:rows.filter(q=>state.results[q.id].choice===q.answer).length,wrong:rows.filter(q=>state.results[q.id].choice!==q.answer).length};}
   }
+  state.chemistryStudy=normalizeChemistryStudy(raw.chemistryStudy,state.results);
   state.challenge=raw.challenge || null;
   state.challengeEarned=raw.challengeEarned && typeof raw.challengeEarned==='object'?raw.challengeEarned:{};
   for(const filter of ['all',...TOPICS.map((_,i)=>String(i))])if(validDeck(raw.topicTests?.[filter],filter))state.topicTests[filter]=raw.topicTests[filter];
@@ -39,12 +44,12 @@ function load(snapshot) {
   state.filter = ['all','review',...TOPICS.map((_,i)=>String(i))].includes(savedFilter) ? savedFilter : 'all';
   state.current = ALL_QUESTIONS.some(q => q.id === raw.current) ? raw.current : null;
   const round=raw.round;
-  if(round&&round.filter===state.filter&&validDeck(round.ids,state.filter)) {
+  if(round&&String(round.filter)===state.filter&&validDeck(round.ids,state.filter)) {
    const answers={};
-   round.ids.forEach(id=>{const a=round.answers?.[id];if(a&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)answers[id]={id,choice:a.choice,delta:Number.isSafeInteger(a.delta)?a.delta:0,bonus:a.bonus===true,penalty:a.penalty===true};});
+   round.ids.forEach(id=>{const a=round.answers?.[id];if(a&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)answers[id]={id,choice:a.choice,delta:Number.isSafeInteger(a.delta)?a.delta:0,bonus:a.bonus===true,penalty:a.penalty===true,questionXp:Number.isSafeInteger(a.questionXp)?a.questionXp:0,completionXp:Number.isSafeInteger(a.completionXp)?a.completionXp:0,bonusXp:Number.isSafeInteger(a.bonusXp)?a.bonusXp:0};});
    state.round={filter:state.filter,mode:round.mode==='random'?'random':'same',ids:round.ids,answers,finished:round.finished===true&&Object.keys(answers).length===round.ids.length};
   }
-  if(raw.response?.id === state.current && Number.isInteger(raw.response.choice) && raw.response.choice >= 0 && raw.response.choice < 4 && state.results[state.current]?.choice === raw.response.choice) state.response = {id:state.current,choice:raw.response.choice,delta:Number.isSafeInteger(raw.response.delta)?raw.response.delta:0,bonus:raw.response.bonus===true,penalty:raw.response.penalty===true};
+  if(raw.response?.id === state.current && Number.isInteger(raw.response.choice) && raw.response.choice >= 0 && raw.response.choice < 4 && state.results[state.current]?.choice === raw.response.choice) state.response = {id:state.current,choice:raw.response.choice,delta:Number.isSafeInteger(raw.response.delta)?raw.response.delta:0,bonus:raw.response.bonus===true,penalty:raw.response.penalty===true,questionXp:Number.isSafeInteger(raw.response.questionXp)?raw.response.questionXp:0,completionXp:Number.isSafeInteger(raw.response.completionXp)?raw.response.completionXp:0,bonusXp:Number.isSafeInteger(raw.response.bonusXp)?raw.response.bonusXp:0};
   return state;
  } catch { storageOK = false; return fresh(); }
 }
@@ -152,7 +157,8 @@ function showAnswerPopup(q,correct,earnedNow,response=state.response) {
  $('popup-detail').textContent=correct
   ? (earnedNow?'A new question mastered.':isJee?'Already attempted — practice only, +0 XP.':'Already mastered — no extra XP this time.')
   : `Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}`;
- if(response.bonus) $('popup-detail').textContent='Six correct in a row! Your 20% bonus added 4 XP.';
+ if(response.bonus) $('popup-detail').textContent=`Six correct in a row! Your 20% bonus added ${response.bonusXp||4} XP.`;
+ if(isChemistry2027&&response.completionXp)$('popup-detail').textContent=`Question +${response.questionXp||0} XP · topic completion +${response.completionXp} XP.`;
  if(response.penalty) $('popup-detail').textContent=`Five wrong in a row: your XP was halved. Correct answer: ${'ABCD'[q.answer]}. ${q.options[q.answer]}`;
  $('popup-xp').textContent=`${response.delta<0?'':'+'}${response.delta} XP`;
  $('popup-total').textContent=`Total: ${state.xp} XP`;
@@ -168,6 +174,10 @@ function save() {
  globalThis.queueCloudSave?.();
 }
 function missed() { return ALL_QUESTIONS.filter(q => state.results[q.id] && state.results[q.id].choice !== q.answer); }
+function reviewQuestionIds(){
+ if(isChemistry2027&&state.chemistryStudy.revisionIds.length)return state.chemistryStudy.revisionIds.filter(id=>state.results[id]?.choice!==chemistryQuestion(id).answer);
+ return missed().map(q=>q.id);
+}
 function pool() {
  if(state.round?.filter===state.filter)return state.round.ids.map(id=>ALL_QUESTIONS.find(q=>q.id===id));
  if(state.filter === 'review') return reviewQueue.map(id => ALL_QUESTIONS.find(q=>q.id===id)).filter(Boolean);
@@ -203,6 +213,7 @@ function stats() {
  updateProfile();
  renderCounts();
  renderSyllabusUnit();
+ if(isChemistry2027)renderChemistryDashboard();
  const level = Math.floor(state.xp/100)+1, progress=state.xp%100;
  $('level').textContent = level;
  $('rank').textContent = level < 4 ? 'Curious mind' : level < 8 ? 'Bond builder' : level < 12 ? 'Reaction pro' : 'Chemistry ace';
@@ -217,6 +228,7 @@ function stats() {
   ? `${state.wrongStreak % 5} / 5 wrong toward the next XP halving · every 6th consecutive correct answer earns +24 XP.`
   : state.streak % 6 === 5 ? 'Bonus ready! Your next new correct answer earns +24 XP.'
   : 'Every 6th consecutive correct answer: +24 XP · every 5 consecutive wrong answers: halve current XP.';
+ if(isChemistry2027)$('streak-rule').textContent=state.wrongStreak?`${state.wrongStreak%5}/5 wrong toward the next EXP halving. Every sixth consecutive correct first attempt gets a 20% question bonus.`:'Every sixth consecutive correct first attempt gets a 20% question bonus. Five consecutive wrong answers halve current EXP.';
  $('missed-count').textContent = missed().length;
  $('mix').classList.toggle('active',state.filter === 'all');
  $('review').classList.toggle('active',state.filter === 'review');
@@ -246,7 +258,8 @@ function feedback(q,choice,earnedNow=false) {
  const title=document.createElement('strong');
  const reward=state.response?.id===q.id?state.response:null;
  title.textContent=correct ? (reward?.delta>0 ? `Nicely done! +${reward.delta} XP${reward.bonus?' · 20% streak bonus':''}` : 'That’s right. Keep it fresh!') : `Good try. The answer is ${'ABCD'[q.answer]}.${reward?.penalty?` XP halved: ${reward.delta} XP.`:''}`;
- const p=document.createElement('p');p.textContent=q.explanation;box.append(title,p);
+ if(isChemistry2027){box.append(title);const detail=document.createElement('p');detail.textContent=`Question +${reward?.questionXp||0} XP · topic completion +${reward?.completionXp||0} XP.`;box.append(detail);renderChemistrySteps(box,q);}
+ else {const p=document.createElement('p');p.textContent=q.explanation;box.append(title,p);}
 }
 function render(animate=false) {
  chooseInitial();stats();
@@ -275,6 +288,7 @@ function render(animate=false) {
  // Rebuild the question content, including after the empty review state.
  body.replaceChildren();
  const kicker=document.createElement('div');kicker.className='question-kicker';kicker.textContent='PICK THE CORRECT ANSWER';
+ if(isChemistry2027)kicker.textContent=`${q.category.toUpperCase()} · ${q.difficulty.toUpperCase()} · ORIGINAL PRACTICE`;
  const h=document.createElement('h2');h.id='question-text';h.textContent=q.prompt;h.tabIndex=-1;
  const options=document.createElement('div');options.id='options';options.className='options';options.setAttribute('role','group');options.setAttribute('aria-label','Answer choices');
  const answered=state.response?.id===q.id;
@@ -294,6 +308,7 @@ function render(animate=false) {
  $('question-position').textContent=`${String(list.findIndex(x=>x.id===q.id)+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}`;
  $('next').innerHTML=answered?'Next question <span>→</span>':'Skip question <span>→</span>';
  $('reward-note').textContent=(isJee?state.results[q.id]:state.results[q.id]?.earned)?'Practice only · 0 XP on repeats': state.streak%6===5?'✦ +24 XP if correct · streak bonus':'✦ +20 XP for a new correct answer';
+ if(isChemistry2027&&!state.results[q.id])$('reward-note').textContent=`First attempt · +${CHEMISTRY_STUDY_CONFIG.questionXp[q.difficulty]} XP if correct${state.streak%6===5?' · 20% bonus ready':''}`;
  if(answered) feedback(q,state.response.choice);
  if(animate) h.focus({preventScroll:true});
 }
@@ -310,8 +325,24 @@ function answer(choice) {
   : state.streak%6===5 && !state.results[q.id]?.earned
    ? 'If correct, this answer earns 24 XP — including your 20% streak bonus.'
    : isJee ? 'This is your first attempt. A wrong answer uses this question’s XP chance.' : 'Your answer will be checked only after you confirm.';
+ if(isChemistry2027&&!state.results[q.id]&&state.wrongStreak%5!==4)$('confirmation-stakes').textContent=`Correct first attempt: ${Math.round(CHEMISTRY_STUDY_CONFIG.questionXp[q.difficulty]*(state.streak%6===5?1.2:1))} question XP. A wrong answer uses this reward chance.`;
  $('confirm-answer').returnValue='';
  $('confirm-answer').showModal();
+}
+function recordPracticeAnswer(q,choice) {
+ const correct=choice===q.answer,earnedNow=correct&&(isJee?!state.results[q.id]:!state.results[q.id]?.earned);
+ const before=state.xp;
+ recordAttempt(q.topic,correct);
+ state.results[q.id]={choice,earned:earnedNow||!!state.results[q.id]?.earned||(isJee&&correct)};
+ state.streak=correct?state.streak+1:0;state.best=Math.max(state.best,state.streak);
+ state.wrongStreak=correct?0:state.wrongStreak+1;
+ const bonus=earnedNow&&state.streak%6===0,penalty=!correct&&state.wrongStreak%5===0;
+ const base=isChemistry2027?CHEMISTRY_STUDY_CONFIG.questionXp[q.difficulty]:20;
+ const questionXp=earnedNow?Math.round(base*(bonus?1.2:1)):0;
+ state.xp+=questionXp;
+ if(penalty)state.xp=Math.floor(state.xp/2);
+ const completionXp=isChemistry2027?awardChemistryTopicBonuses():0;
+ return {id:q.id,choice,delta:state.xp-before,bonus,penalty,questionXp,completionXp,bonusXp:bonus?questionXp-base:0,correct,earnedNow};
 }
 function commitAnswer(choice) {
  const q=activeQuestion();if(!q || state.response?.id===q.id) return;
@@ -323,21 +354,12 @@ function commitAnswer(choice) {
   $('next').focus({preventScroll:true});
  });
  if(remote)return remote;
- const correct=choice===q.answer, earnedNow=correct && (isJee?!state.results[q.id]:!state.results[q.id]?.earned);
- recordAttempt(q.topic,correct);
  const oldLevel=Math.floor(state.xp/100)+1;
- state.results[q.id]={choice,earned:earnedNow || !!state.results[q.id]?.earned || (isJee&&correct)};
- const before=state.xp;
- state.streak=correct ? state.streak+1 : 0;state.best=Math.max(state.best,state.streak);
- state.wrongStreak=correct ? 0 : state.wrongStreak+1;
- const bonus=earnedNow && state.streak%6===0;
- const penalty=!correct && state.wrongStreak%5===0;
- if(earnedNow) state.xp+=bonus?24:20;
- if(penalty) state.xp=Math.floor(state.xp/2);
- state.response={id:q.id,choice,delta:state.xp-before,bonus,penalty};
+ const receipt=recordPracticeAnswer(q,choice),{correct,earnedNow}=receipt;
+ state.response=receipt;
  if(state.round)state.round.answers[q.id]={...state.response};
  save();render();feedback(q,choice,earnedNow);
- showAnswerPopup(q,correct,earnedNow);
+ showAnswerPopup(q,correct,earnedNow,receipt);
  const level=Math.floor(state.xp/100)+1;
  if(level>oldLevel) showLevelUp(level);
  else if(earnedNow && ALL_QUESTIONS.every(item=>state.results[item.id]?.earned)) toast('All topic questions mastered. Brilliant work!');
@@ -348,7 +370,8 @@ function setFilter(value) {
  visitCounts={correct:0,wrong:0};
  state.round=null;
  state.filter=value;state.current=null;state.response=null;
- if(value==='review') reviewQueue=missed().map(q=>q.id);
+ if(isChemistry2027)state.chemistryStudy.revisionIds=[];
+ if(value==='review') reviewQueue=reviewQuestionIds();
  render(true);save();
 }
 function next() {
@@ -363,7 +386,7 @@ function next() {
  if(!pool().length && !activeQuestion()){setFilter('all');return;}
  if(state.filter==='review') {
   const currentIndex=ALL_QUESTIONS.findIndex(q=>q.id===state.current);
-  reviewQueue=missed().map(q=>q.id);
+  reviewQueue=reviewQuestionIds();
   state.current=[...ALL_QUESTIONS.slice(currentIndex+1),...ALL_QUESTIONS.slice(0,currentIndex+1)]
    .find(q=>reviewQueue.includes(q.id))?.id||null;
   state.response=null;render(true);save();return;
@@ -376,12 +399,14 @@ function next() {
 }
 // Navigation remains lightweight, with native select controls on small screens.
 for(const branch of new Set(TOPICS.map(([,group]) => group))) {
- const heading=document.createElement('div');heading.className='branch';heading.textContent=`${branch}${isChemistry && !isJee ? ' chemistry' : ''}`;$('topics').append(heading);
+ const container=isChemistry2027?document.createElement('details'):$('topics');
+ if(isChemistry2027){container.className='sidebar-group';container.open=true;$('topics').append(container);}
+ const heading=document.createElement(isChemistry2027?'summary':'div');heading.className='branch';heading.textContent=`${branch}${isChemistry && !isJee ? ' chemistry' : ''}`;container.append(heading);
  TOPICS.forEach(([name,group],t)=>{
   if(group!==branch)return;
   const button=document.createElement('button');button.className='topic';
   const label=document.createElement('span');label.textContent=name;const count=document.createElement('small');count.textContent='0/4';
-  button.append(label,count);button.dataset.topic=t;button.addEventListener('click',()=>setFilter(String(t)));$('topics').append(button);
+  button.append(label,count);button.dataset.topic=t;button.addEventListener('click',()=>setFilter(String(t)));container.append(button);
  });
 }
 // Use the topic ID to read mastery even if groups are displayed together.
@@ -413,8 +438,10 @@ if(isJee) {
  $('local-subject-note').textContent='JEE Main 2027 progress saves on this device. XP is available only on each question’s first confirmed attempt.';
  $('challenge-title').textContent=`JEE Main 2027 · ${SUBJECT_LABEL} Challenge`;
  $('practice-reward-rules').textContent='Earn 20 XP for a correct first confirmed attempt at each JEE question, or 24 XP on every sixth consecutive correct answer when it is also a first attempt. A wrong first attempt uses the reward chance. All repeats earn 0 XP. Skipping or cancelling keeps that chance available. Each distinct variation has its own first attempt. Every 100 current XP brings a level. JEE progress saves on this device.';
+ if(isChemistry2027)$('practice-reward-rules').textContent='Correct first attempts earn 10 EXP for Easy, 20 for Medium and 35 for Hard questions. Every sixth consecutive correct answer adds 20% when it is a first attempt. Later attempts earn no question EXP. A practice subtopic with at least two questions earns a one-time 50 EXP bonus at 70% mastery. A chapter test reaching 70% earns 100 EXP once; reaching 90% earns 75 EXP once. Skipping and cancelling keep the question’s first attempt available. Each distinct variation has its own chance. Every 100 current EXP brings a level. Progress saves on this device.';
  document.title=`${SUBJECT_LABEL} · JEE Main 2027 · Chemistry Quest`;
- JEE_UNITS[SUBJECT].forEach(([name,,scope],index)=>{
+ if(isChemistry2027)buildChemistryOutline();
+ else JEE_UNITS[SUBJECT].forEach(([name,,scope],index)=>{
   const item=document.createElement('div');
   const button=document.createElement('button');button.type='button';button.className='text-button';
   button.textContent=`Unit ${index+1} · ${name}`;button.addEventListener('click',()=>setFilter(String(index)));
@@ -455,6 +482,7 @@ $('reset-button').addEventListener('click',()=>{
  $('reset-description').textContent=KEY===GUEST_PROGRESS_KEY
   ? 'This clears your guest XP, answers, streaks, and profile on this device. You can’t undo it.'
   : 'This resets your account’s XP, answers, streaks, challenge progress, and profile. The reset will sync online and appear on your other devices. You can’t undo it.';
+ if(isChemistry2027)$('reset-description').textContent='This clears EXP, answers, streaks, profile, chapter tests and completion bonuses for JEE Chemistry on this device. You can’t undo it.';
  $('reset-dialog').showModal();
 });
 $('reset-dialog').addEventListener('close',()=>{if($('reset-dialog').returnValue==='reset'){
@@ -467,7 +495,8 @@ document.addEventListener('keydown',event=>{
  else if(event.key==='Enter' && event.target===document.body && state.response){event.preventDefault();next();}
 });
 if(state.filter==='review') {
- reviewQueue=missed().map(q=>q.id);
+ reviewQueue=reviewQuestionIds();
  if(state.response && !reviewQueue.includes(state.current))reviewQueue.unshift(state.current);
 }
 render();save();
+setupChemistryStudy();

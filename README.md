@@ -103,10 +103,42 @@ For a fresh backend, apply `backend/schema.sql`, then `backend/scoring.sql`, the
 
 ## JEE Main 2027 Paper 1
 
-Choose JEE Main 2027 from Study track, or open `?exam=jee-main-2027&subject=chemistry` (also `maths` or `physics`). The track follows the 14 Mathematics, 20 Physics and 20 Chemistry units in the NTA syllabus at https://jeemain.nta.nic.in/document/syllabus-2027/. Unit descriptions summarize Paper 1, pages 1–11.
+Choose JEE Main 2027 from Study track, or open `?exam=jee-main-2027&subject=chemistry` (also `maths` or `physics`). The track follows the 14 Mathematics, 20 Physics and 20 Chemistry units in the NTA syllabus at https://jeemain.nta.nic.in/document/syllabus-2027/. Mathematics and Physics descriptions summarize Paper 1. Chemistry includes the full unit scope from pages 7–11, with normalized line wrapping and formula typography.
 
-The new track contains 108 original base questions and 108 paired variations across all 54 units. These are starter samples of selected ideas within each unit, with four choices and explanations. Thirty existing challenge questions are mapped to the new units; the Chemistry integrated second-order problem is replaced by an in-scope zero-order problem. These are original practice questions.
+The JEE track contains 536 practice questions across all 54 units: 400 Chemistry, 80 Physics and 56 Mathematics. Mathematics and Physics remain starter samples. Chemistry has 20 questions per chapter, covering conceptual, formula, numerical, application, misconception and mixed revision categories, with four choices and worked explanations. Thirty existing challenge questions are mapped to the new units; the Chemistry integrated second-order problem is replaced by an in-scope zero-order problem. These are original practice questions.
 
 JEE progress uses a distinct browser save key per subject. It currently saves on the device, and the new IDs are excluded from the existing account scoring catalog. Online account rewards for this bank need a server catalog update. In the JEE track, only a correct first confirmed attempt can earn XP; correcting a first mistake and challenge retries award 0 XP. Retakes still update mastery.
 
 Run `node check-jee-syllabus.cjs` with the existing regression checks. The service worker includes the new syllabus and question file for offline practice.
+
+
+## Chemistry platform update — 19 November 2026
+
+Open [JEE Main 2027 Chemistry](https://steamaccforme1983-lang.github.io/chemistry-quest/?exam=jee-main-2027&subject=chemistry). The original EAPCET track and account system remain available through Study track.
+
+- Full official scope for all 20 units in four collapsible groups: eight Physical, four Inorganic, seven Organic and one Practical. The 90 stored text sections preserve the PDF scope, including practical experiments, qualitative ions, organic preparations and the first-order/zero-order kinetics restriction. These sections are display groupings, not an NTA count of individual topics.
+- 400 original single-correct Chemistry questions, including all 80 previously published questions with the same IDs, prompts, choices and answer indices. New questions are original practice, with no previous-year-paper attribution. Mixed revision can reference another valid official unit while retaining its original chapter ID.
+- Worked steps appear after confirmed practice submissions. Chapter tests use 20 questions and 30 minutes, hide results until submission, persist choices and deadlines, and automatically finish on expiry. Closing a test does not pause it. Results include unanswered items, weak sections, retry and scoped mistake revision.
+- A collapsible dashboard shows chapter mastery, practice-topic mastery, XP/level, accuracy, four-group performance, chapter percentages, recent scores and revision recommendations. Chapter mastery requires 70% practice mastery or a best chapter-test score of 70%. Practice-topic mastery requires at least two available mapped questions and 70% ever-correct mastery.
+- Persistent dark/light mode, reduced-motion support and responsive layouts need no new libraries.
+
+Chemistry reward configuration is in `CHEMISTRY_STUDY_CONFIG` in `chemistry-study.js`:
+
+| Activity | XP | Eligibility |
+|---|---:|---|
+| Correct easy / medium / hard | 10 / 20 / 35 | First confirmed attempt only |
+| Practice topic mastered | 50 | Once per eligible official section |
+| Chapter test reaches 70% | 100 | Once per chapter |
+| Chapter test reaches 90% | 75 | Once per chapter |
+
+Every sixth consecutive correct practice response retains the 20% boost when question XP is eligible. Five consecutive wrong practice responses retain the XP-halving rule. The separate original ten-question challenge keeps its 50–90 XP rewards. Test choices are scored only on submission. Repeating questions awards zero question XP, including correcting an initial mistake. Improving mastery can still unlock an unclaimed completion bonus.
+
+### Migration and storage
+
+The additive `chemistryStudy` save field contains bonus receipts, test history (latest 40), best scores, revision IDs and an active test. Loading validates and deduplicates saved records. Migration is safe to repeat and preserves question results, balances, levels, avatars, achievements and valid earlier two-question chapter rounds. Already-mastered topics in older saves are marked claimed without retroactive bonus grants or XP changes. Historic attempt counters are retained when present, otherwise only the recorded latest responses can be reconstructed.
+
+`CHEMISTRY_CHAPTER_MAPPINGS` maps the original 16 chapter groups to the official units. Standalone s-block compound practice is tagged legacy and retained in the original track. Relevant periodicity and p-block concepts map to the official classification, bonding and p-block units. No old bank or account data is deleted.
+
+**JEE progress remains device-local**, using its existing separate per-subject localStorage keys. JEE questions, tests and rewards are not yet registered in the account server catalog and do not sync between devices or participate in account battles. Browser-local XP can be edited by the device owner. Existing EAPCET account scoring is unchanged. No database migration is required for this release, and the pending account first-attempt migration is not applied by it.
+
+See [CHEMISTRY_2027_UPDATE.md](CHEMISTRY_2027_UPDATE.md) for validation results and limits. The service-worker cache is `2026-11-19-chemistry-platform-1`; existing installed apps receive the update after closing all app windows/tabs and reopening online.

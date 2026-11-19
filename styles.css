@@ -79,6 +79,74 @@
 .owner-badge{display:inline-block;margin-left:7px;padding:2px 7px;border:1px solid #decc92;border-radius:99px;background:#fff5d4;color:#61470f;font-size:10px;font-weight:700;vertical-align:middle;white-space:nowrap}
 
 /* Shared visual system for the study space and all account surfaces. */
+.theme-toggle {display:grid;place-items:center;width:36px;height:36px;flex:none;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--ink);font-size:20px;}
+.chemistry-dashboard[hidden],.chemistry-test-controls[hidden],#chapter-completion[hidden] {display:none;}
+.chemistry-dashboard {margin-bottom:22px;padding:17px 20px;border:1px solid var(--line);border-radius:14px;background:var(--paper);min-width:0;}
+.chemistry-dashboard > summary {font-weight:600;font-size:13px;}
+.dashboard-metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin:18px 0;}
+.dashboard-metrics > div {display:flex;flex-direction:column;gap:5px;}
+.dashboard-metrics strong {font-size:20px;font-weight:600;}
+.dashboard-metrics span {font-size:10px;color:var(--muted);}
+.chemistry-group-results {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0;}
+.chemistry-group-results > div {padding:13px;border:1px solid var(--line);border-radius:10px;}
+.chemistry-group-results strong {font-size:12px;}
+.chemistry-group-results p,.chemistry-dashboard p,.study-note {font-size:11px;color:var(--muted);line-height:1.8;}
+.chemistry-dashboard h3 {font-size:14px;margin-top:24px;}
+.chemistry-dashboard table {min-width:520px;}
+.chemistry-dashboard .table-scroll {max-width:100%;}
+.chemistry-test-controls {display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;margin-bottom:23px;border:1px solid var(--line);border-radius:13px;background:var(--paper);}
+.chemistry-test-controls strong {font-size:13px;}
+.chemistry-test-controls p {font-size:11px;color:var(--muted);line-height:1.7;margin:7px 0;}
+#chapter-completion {max-width:450px;margin-top:13px;}
+#chapter-completion small {display:block;font-size:10px;color:var(--muted);margin-top:7px;}
+.curriculum-group > summary {font-weight:600;}
+.curriculum-group details {padding:7px 12px;}
+.curriculum-group details > summary {font-weight:500;line-height:1.7;}
+.syllabus-card li {font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:7px;}
+.sidebar-group > summary {cursor:pointer;list-style:none;}
+.sidebar-group > summary::after {content:'⌄';margin-left:auto;}
+.sidebar-group[open] > summary::after {content:'⌃';}
+.explanation-steps {padding-left:21px;margin:10px 0;font-size:13px;line-height:1.8;}
+.explanation-steps li {margin-bottom:5px;}
+#chapter-test-dialog {width:min(800px,calc(100% - 28px));max-width:800px;}
+.chapter-test-heading {display:flex;gap:16px;justify-content:space-between;align-items:flex-start;padding-right:24px;}
+.chapter-test-heading h2 {font-size:23px;margin-top:10px;}
+#chapter-test-timer {padding:10px;border-radius:9px;background:var(--pale);font-size:19px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+#chapter-test-content > h3 {font-size:19px;line-height:1.6;font-weight:500;}
+#chapter-test-content .options {margin-bottom:20px;}
+#chapter-test-content .option[aria-pressed="true"] {background:var(--pale);border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);}
+#chapter-test-content details {border-top:1px solid var(--line);padding:10px 0;}
+#chapter-test-content summary {font-size:12px;line-height:1.8;}
+#chapter-test-content p {font-size:12px;}
+html[data-theme="dark"] {color-scheme:dark;--bg:#16221e;--paper:#1d2c25;--ink:#e1eade;--muted:#b4c0ad;--green:#9bc29b;--pale:#30452f;--line:#3a493b;}
+html[data-theme="dark"] .sidebar {background:#102e27;}
+html[data-theme="dark"] .topbar {background:#1d2c25;}
+html[data-theme="dark"] dialog {background:var(--paper);color:var(--ink);border-color:var(--line);}
+html[data-theme="dark"] .breadcrumb,html[data-theme="dark"] .save-state,html[data-theme="dark"] #local-subject-note {color:var(--muted);}
+html[data-theme="dark"] .dialog-close,html[data-theme="dark"] .popup-close,html[data-theme="dark"] .question-kicker,html[data-theme="dark"] .question-meta,html[data-theme="dark"] .practice-heading > span,html[data-theme="dark"] .retake-toolbar p,html[data-theme="dark"] .attempt-grid span,html[data-theme="dark"] .attempt-summary > p,html[data-theme="dark"] .number-stat strong small,html[data-theme="dark"] .keycap {color:var(--muted);}
+html[data-theme="dark"] .track {background:#3a493b;}
+html[data-theme="dark"] .track span {background:#a6bf80;}
+html[data-theme="dark"] .challenge-dot {background:#25372c;color:var(--ink);border-color:var(--line);}
+html[data-theme="dark"] .challenge-dot.current {background:#3c583b;border-color:#9bc29b;}
+html[data-theme="dark"] .option {color:var(--ink);background:var(--paper);}
+html[data-theme="dark"] .letter,html[data-theme="dark"] .stat-icon {background:#30432d;color:#c7dbaf;border-color:var(--line);}
+html[data-theme="dark"] .subject-nav,html[data-theme="dark"] .retake-toolbar,html[data-theme="dark"] .account-tabs,html[data-theme="dark"] .install-platform {background:#25372c;border-color:var(--line);}
+html[data-theme="dark"] .challenge-card {background:linear-gradient(115deg,#273b29,#233329);border-color:#48563b;}
+html[data-theme="dark"] .challenge-timer {background:#35472c;color:#d1dbb4;border-color:#4c5e3f;}
+html[data-theme="dark"] .subject-nav a,html[data-theme="dark"] .subject-nav a[aria-current="page"] {color:var(--ink);}
+html[data-theme="dark"] .subject-nav a[aria-current="page"] {background:#304a35;border-color:#56734b;}
+html[data-theme="dark"] .topic-pill {background:#30432d;border-color:#465d3e;color:#d0e1bd;}
+html[data-theme="dark"] .feedback,html[data-theme="dark"] #sync-status {background:#293e2b;color:#d0e5c5;}
+html[data-theme="dark"] .feedback.incorrect,html[data-theme="dark"] .option.wrong {background:#4a302b;color:#f3c2ac;border-color:#916751;}
+html[data-theme="dark"] .option.correct {background:#29452f;color:#d3ecc9;border-color:#719f6d;}
+html[data-theme="dark"] .secondary,html[data-theme="dark"] .account-header .secondary,html[data-theme="dark"] .retake-buttons .secondary {background:var(--paper);color:var(--ink);border-color:var(--line);}
+html[data-theme="dark"] .option:hover:not(:disabled),html[data-theme="dark"] .secondary:hover:not(:disabled) {background:#30432d;}
+html[data-theme="dark"] #account-dialog input,html[data-theme="dark"] #profile-name,html[data-theme="dark"] #recovery-saved-dialog textarea,html[data-theme="dark"] #battle-friend-code,html[data-theme="dark"] .sticker-choice {background:#25372c;color:var(--ink);border-color:var(--line);}
+html[data-theme="dark"] .level-up-popup,html[data-theme="dark"] .answer-popup {background:#22382b;color:var(--ink);}
+html[data-theme="dark"] .level-up-popup blockquote {background:#2c412c;color:#d4e5c4;}
+html[data-theme="dark"] dialog p,html[data-theme="dark"] #account-dialog p,html[data-theme="dark"] .challenge-card p,html[data-theme="dark"] .intro p,html[data-theme="dark"] .below-card,html[data-theme="dark"] .streak-rule,html[data-theme="dark"] .coverage p,html[data-theme="dark"] .number-stat > span,html[data-theme="dark"] .stat-caption,html[data-theme="dark"] .level-line > span,html[data-theme="dark"] .level-progress small {color:var(--muted);}
+html[data-theme="dark"] .eyebrow,html[data-theme="dark"] h1 em,html[data-theme="dark"] th,html[data-theme="dark"] .account-tabs button,html[data-theme="dark"] #account-dialog label {color:#bbd3a4;}
+@media(max-width:680px){.dashboard-metrics {grid-template-columns:1fr 1fr;}.chemistry-group-results {grid-template-columns:1fr;}.chemistry-test-controls {align-items:flex-start;flex-direction:column;gap:10px;}.chemistry-test-controls .primary {width:100%;}.topbar {gap:8px;padding:0 14px;}.breadcrumb {max-width:105px;}.account-header {gap:7px;}.account-header .secondary {font-size:9px;padding:8px;}.chapter-test-heading h2 {font-size:19px;}#chapter-test-dialog {padding:24px 18px;}}
 .exam-picker { display:flex;align-items:center;gap:12px;margin-bottom:20px; }
 .exam-picker label { font-size:11px;color:var(--muted);white-space:nowrap; }
 .exam-picker select { width:auto;max-width:100%;min-width:0;min-height:42px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);font:inherit;font-size:12px; }

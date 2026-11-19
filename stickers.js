@@ -1,7 +1,9 @@
 'use strict';
 
 const GUEST_PROGRESS_KEY = isJee ? 'chemistry-quest-jee-main-2027-'+SUBJECT+'-v1' : isChemistry ? 'chemistry-quest-v1' : 'chemistry-quest-'+SUBJECT+'-v1';
-const MAX_STICKER_LEVEL = 1 + Math.floor((ALL_QUESTIONS.length * 24 + 900) / 100);
+const MAX_STICKER_LEVEL = 1 + Math.floor((isChemistry2027
+ ? ALL_QUESTIONS.length*CHEMISTRY_STUDY_CONFIG.questionXp.hard*1.2+CHEMISTRY_SYLLABUS_2027.flatMap(unit=>unit.subtopics).length*CHEMISTRY_STUDY_CONFIG.topicCompletionXp+20*(CHEMISTRY_STUDY_CONFIG.chapterTestXp+CHEMISTRY_STUDY_CONFIG.highScoreXp)+900
+ : ALL_QUESTIONS.length*24+900)/100);
 const STICKER_PALETTES = [
  ['Sakura', '#ffe2ed', '#6e354f', '#c85085', '#fff4bd'],
  ['Mint', '#cff7e9', '#224e54', '#378a81', '#ffdd91'],
@@ -23,8 +25,14 @@ const STICKER_STYLES = [
 function stickerForLevel(level) {
  if (level === 1) return {name:'Chemistry Quest', image:'icons/icon.svg'};
  const index = level - 2;
- const [color, background, hair, accent, accessoryColor] = STICKER_PALETTES[index % STICKER_PALETTES.length];
- const [style, accessory] = STICKER_STYLES[Math.floor(index / STICKER_PALETTES.length)];
+ let [color, background, hair, accent, accessoryColor] = STICKER_PALETTES[index % STICKER_PALETTES.length];
+ const [style, accessory] = STICKER_STYLES[Math.floor(index / STICKER_PALETTES.length)%STICKER_STYLES.length];
+ const cycle=Math.floor(index/(STICKER_PALETTES.length*STICKER_STYLES.length));
+ if(cycle){
+  const hue=Math.round(index*137.508)%360;
+  color=`${color} ${cycle+1}`;background=`hsl(${hue},70%,88%)`;hair=`hsl(${hue},30%,25%)`;
+  accent=`hsl(${hue},55%,45%)`;accessoryColor=`hsl(${(hue+50)%360},75%,78%)`;
+ }
  const fringe = index % 2 ? 'M23 53q5-28 32-25 23 3 24 25-17-3-24-17-12 18-32 17z' : 'M23 53q2-26 27-27 26 1 29 27-14-1-22-16l-7 14-8-9q-6 10-19 11z';
  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
  <rect width="100" height="100" rx="24" fill="${background}"/>

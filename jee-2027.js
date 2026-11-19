@@ -188,8 +188,9 @@ function jeePractice(variant) {
  return JEE_PATTERNS[SUBJECT].flatMap((patterns,topic)=>patterns.map((pattern,index)=>{
   const [prompt,correct,distractors,explanation]=pattern(5+(variant?1:0),variant);
   const id=`jee2027-${SUBJECT}-${topic}-${index}`;
-  return {...exercise(prompt,String(correct),distractors.map(String),explanation,(topic+index+(variant?1:0))%4),
+  const question={...exercise(prompt,String(correct),distractors.map(String),Array.isArray(explanation)?explanation.join(' '):explanation,(topic+index+(variant?1:0))%4),
    id:(variant?'v-':'')+id,topic,pattern:id};
+  return SUBJECT==='chemistry'&&typeof decorateChemistryQuestion==='function'?decorateChemistryQuestion(question,index,explanation):question;
  }));
 }
 
@@ -205,6 +206,7 @@ function jeeChallenge() {
 
 function renderSyllabusUnit() {
  if(!isJee)return;
+ if(isChemistry2027){renderChemistrySyllabus();return;}
  const unit=JEE_UNITS[SUBJECT][Number(state.filter)];
  $('syllabus-current').textContent=unit?`Unit ${Number(state.filter)+1} · ${unit[0]}`:`${JEE_UNITS[SUBJECT].length} NTA units · ${SUBJECT_LABEL}`;
  $('syllabus-scope').textContent=unit?unit[2]:'Starter practice samples each unit. Use the full NTA syllabus for all required subtopics.';
